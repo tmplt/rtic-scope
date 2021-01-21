@@ -1,0 +1,15 @@
+[default.probe]
+usb_vid = "0483"
+usb_pid = "374b"
+# protocol = "swd"
+
+[default.general]
+chip = "STM32F411CEUx"
+
+[default.reset]
+enabled = true
+halt_afterwards = false
+
+[default.gdb]
+enabled = true
+gdb_connection_string = "127.0.0.1:1337"
