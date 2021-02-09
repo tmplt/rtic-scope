@@ -1,0 +1,446 @@
+#+SEQ_TODO: TODO STARTED | DONE CANCELLED
+
+* Master's theses in Rust and embedded systems
+Next meet planned for [2021-01-15 Fri] before the next semester begins.
+
+** Proposed theses
+1. Safe approximation of path WCET
+   - Topcs: KLEE; symbolic execution/verification; optimization levels/layers.
+   - Application of research related to scheduling.
+   - Probable communication with London team.
+   - Analysis of how KLEE/LLVM behaves.
+2. LLVM-IR as as approx WCET
+   - Map LLVM-IR instuctions to architecture instuction count and
+     execution time.
+   - Topics: how programs are written; algorithms; trade-off between
+     correctness and work-load; compilation technology/theory.
+3. Program analasys using formal methods
+   - Path explosion and how to detect and analyse them.
+   - Topics: Mathematics, formal proofs
+4. Tooling: RTIC -> test gen -> automated measurements -> analysis ->
+   presentation.
+   - Probably popular commercially.
+5. Better debug for optimized code
+   - DWARF in ELF
+   - Probe.rs and/or GDB.
+6. Map out tasks that take resources and send/recv messages in
+   real-time.
+   - Allegedly a lot applications.
+   - Catch events from a host-site application and present them.
+   - Related to thesis 4?
+7. RTIC + FPGA + VHDL + RISCV
+   - Experiments with interrupt HW implementation.
+   - Porting RTIC to another architecture.
+   - NVIC implementation.
+   - Symbolic implementation of implementations.
+
+* Meeting at Grepit, [2021-01-13 Wed]; RTIC Scope
+- ITM-, ETM-baserad tracing
+- TPUI periph
+  - intern buffer
+  - snackar seriellt över en ~swo~-port
+
+
+** DONE Peripherals of interest
+   SCHEDULED: <2021-01-18 Mon>
+# Most descriptions are from the ARM Cortex-M4 Technical Reference Manual
+- ITM :: Instumentation Trace Macrocell: application-driven trace source
+  that supports =printf=-style debugging to trace operating system and
+  application events, and generates diagnostic system information. The
+  ITM generates trace information as packets from software traces, time
+  stamping and global timestamping sources. [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::682++0.00][ITM is a non-invasive form
+  of debugging.]]
+- ETM :: real-time trace module providing instuction and data tracing of
+  a processor. An ETM is an integral part of an ARM RealView debug solution.
+- DWT :: Data Watchpoint and Trace: contains four comparators that can
+  be configured as hardware watchpoints, ETM triggers, PC sampler event
+  trigger, or a data address sampler event trigger.
+- TPIU :: Trace Port Interface Unit: acts as a bridge between the
+  on-chip trace data from the Embedded Trace Macrocell (ETM) and the
+  Instumentation Trace Macrocell (ITM), with seperate IDs, to a data
+  stream. The TPIU encapsulates IDs where required, and the data stream
+  is then captured by a Trace Port Analyzer (TPA).
+- RTT :: Real-Time Transfer: J-Link/SEGGER-defined protocol for tracing
+  via memory buffer. Supported by ~probe.rs~. Allegedly implemented
+  using a simple ring buffer.
+- Watch points :: Similar to breakpoints; but instead of ~PC~ match,
+  debug state is entered when a memory address of interest (and/or a
+  variable) is accessed. Can be set on any memory address in any type of
+  memory.
+
+*** [[pdf:~/sync/uni/exjobb/dm00119316-stm32f411xce-advanced-armbased-32bit-mcus-stmicroelectronics.pdf::823++0.00][Instumentation Trace Macrocell]] (ITM)
+The ITM emits trace information as packets which can be generated as:
+- Software trace :: Software can write directly to the ITM stimulus
+  registers to emit packets.
+- Hardware trace :: The Data Watchpoint Trigger (DWT) generates these
+  packets, and the ITM emits them.
+- Time stamping :: Timestampings are emitted relative to packets. The
+  ITM contains a 21-bit counter to generate the timestamp. The Cortex-M4
+  with FPU clock or the bit clock rate of the /Serial Wire Viewer/ (SWV)
+  outputs clocks the counter.
+
+The packets are emitted by the ITM are output to the TPIU. The formatter
+of the TPIU adds some extra packets and then output the complete packet
+sequence to the debugger host.
+
+**** Stimulus ports
+- Write all ones to the Trace Privilege Register and read-back; the
+  number of ones tell us how many stimulus ports the device has. Always
+  a multiple of 8.
+- [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::709++0.00][*Writes to stimulus ports must be properly aligned.*]] Non-aligned
+  access is /unpredictable/.
+- Data written, ~(port ID, write size, data)~, is combined into a packet
+  written to FIFO.
+- If FIFO is full, *packet disgarded*, and Overflow packet generated.
+- Reading stimulus port register of enabled stim. port indicates buffer
+  status. *Watchpoint this register to keep an eye on buffer status over
+  ITM*. A proposed impl. detail is to check buffer status before
+  stimulating. /How does this help?/
+- *DWT uses a different output buffer*.
+
+**** Timestamps
+[[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::710++0.00][Provide information on the timing of event generation with respect to
+their visibility at a trace output port.]]
+
+***** Local timestamps
+      Delta timestamp values: each local timestamp indicates the elapsed
+      time since generating the previous local timestamp. Generated from
+      the timestamp clock in the ITM peritheral. Clock is reset on each
+      generation.
+
+      Implementation definitions:
+      - timestamp counter size;
+      - [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::710++2.71][whether sync or async clock can be used and/or diveded]];
+
+      When a timestamp counter overflows, timer is reset and Overflow
+      packet is generated. Subsequently, a local timestamp packet is
+      sent. This packet can be preemped, but will always have the
+      appropriate value. Local timestamps are maximum 28b. Leading
+      zeroes are truncated.
+
+***** Global timestamps
+      Absolute timestamp values based on a system global timestamp
+      clock. 48b /or/ 68b large. Global timestamps are send in two
+      packets.
+
+**** Synchonization support
+     Syncronization packets are regularly generated. These can be used
+     as a system heartbeat, if enabled. Used to recover bit-to-byte
+     aligngment information in a data stream.
+
+*** [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::719++0.00][Data Watchpoint and Trace unit]] (DWT)
+    Provides (implementation defined; *can be determined*):
+    - Comparators, that support:
+      - watchpoints (on memory address), causes the processor to enter Debug state of take a
+        DebugMonitor exception;
+      - data tracing;
+      - signaling for use with an external resource, e.g. ETM;
+      - PC value tracking;
+      - Cycle count matching;
+    - Additional PC sampling:
+      - PC sample trace output as a result of a cycle count event;
+      - external PC sampling using a PC sample register;
+    - exception trace; and
+    - performance profiling counters.
+
+
+**** DWT comparators
+     Includes up to 15 comparators that compares:
+     - a data address;
+     - an instuction address/mask (a range of addresses can be compared against);
+     - a data value; and
+     - the cycle count counter (comparator 0 only).
+
+     A DWT Data trace packet contains:
+     - address of the instuction that caused data access;
+     - Bits[15:0] of data access address; and
+     - matched data value.
+
+     Exception trace packets can be generated when an exception handler
+     is entered. Can also be generated when excpetion handler is
+     returned from.
+
+*** [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::749++0.00][Embedded Trace Macrocell]] (ETM)
+    Specified in some other document, according to some ETM architecture
+    v3.4.
+
+*** [[pdf:~/sync/uni/exjobb/DDI0403E_d_armv7m_arm.pdf::750++0.00][Trace Port Interface Unit]] (TPIU)
+    A simple bridge between internal debug peripherals (DWT, ITM) the
+    outside world. An ARMv7-M compliant TPIU may provide an asynchronous
+    /Serial Wire Output/ (SWO). SWO can be used to sidestep the STLink,
+    and remove complexity from the export chain.
+
+** DONE Read up on [[https://github.com/japaric/itm-tools][itm-tools]]
+   CLOSED: [2021-01-19 Tue 22:14] SCHEDULED: <2021-01-18 Mon>
+
+# Also read: RM368 for the stm32f401/f411, DDI0403E for the theory
+# behind tracing and debugging, DDI0439B on some M4 definitions, RM0090
+# (reference manual).
+
+** Useful links
+- [probe.rs]; we want to extend this and see how it works.
+- [Druid] for GUI programming
+
+** Notes
+- modify the dispather to call ITM on dispatch, use ~probe.rs~ to catch
+  ITM package, forward to host.
+- how do we synchronize target and host? What needs to be synchronized?
+  (Host and target are running in parallel here)
+- intercept SWO line with dedicated hardware.
+- HS probe :: open source programmer built from the ground up with the
+  Rust in mind. Replicated by Grepit
+- Serial TX on the Nucleo to bypass the ST-Link (which forces us to use
+  openocd, which we do not want to use)
+- Snacka med Johan gällande rymdapplikationer nu under 2021.
+  - Specifikt med rymdföretag etablerade i Kiruna
+
+* Meeting at Grepit, [2021-01-21 Thu];
+** Notes
+- "Knurling Defmt" for real-time tracing.
+- =wfi= causes problems with ITM, RTT.
+- Remove openocd from the chain as a start: TPIU must be configured just
+  as in openocd. Lackluster API in probe.rs; fork it and experiment with
+  values, etc.
+
+** DONE fill in thesis template and submit
+   CLOSED: [2021-01-25 Mon 15:34] SCHEDULED: <2021-01-25 Mon>
+
+** TODO Merge Gabriel's notes below into this document
+   Gabriel will work on some other stuff from now on.
+
+*** Notes regarding ITM investigation/research
+- Default clocks:
+  - SAME5x: 48Mhz
+  - F407: 16Mhz
+  - F103: 8Mhz
+- On SAME5x boards neither TPIU/ITM openocd commands nor probe-rs API is
+  sufficient to enable ITM. *Additional steps*:
+  - Enable ~GCLK_CM4_TRACE~ clock
+  - Set PC27 into function M (~GCLK -> CORTEX_M/SWO~)
+    - Question: Is it possible to setup SWO on PB30 pin and if so - how?
+      (~SAM_D5xE5x_Family_Data_Sheet_DS60001507F.pdf~; p. 37)
+- All platforms
+  - Local timestamping (LTS; ~ITM.TCR.TSENA~ enabled) without asynchronous
+    clock from TPIU (~ITM.TCR.SWOENA~ disabled) seems to work fine
+    although there're also LTS packets without any event associated with
+    it popping up regularly on SWO. These are supposedly overflow
+    packets because the counter value they carry is suspiciously similar
+    to MAX(21-bit unsigned) and LTS counter is 21 bit. This goes however
+    against the specification that says that there should be Overflow
+    packet + LTS packet, not just LTS packet (ARMv7-M arch ref
+    manual; p. 711)
+  - Local timestamping (LTS; ITM.TCR.TSENA enabled) with asynchronous
+    clock from TPIU (ITM.TCR.SWOENA enabled) counts very slow and as
+    such is pretty useless. I don't understand asynchronous clocking of
+    ITM and what is it for so I didn't dig further
+  - Global timestamping (GTS; ITM.TCR.GTSFREQ != 0x0) seems to be not
+    clocked at all regardless of configuration (0x1,0x2,0x3). I couldn't
+    find any additional information on the topic; maybe there's
+    additional clock that needs to be setup on a per MCU basis?
+  - PC sampling (DWT.CTRL.PCSAMPLENA enabled) does not work on F103;
+    seems to work fine on F407. I didn't dig much further because I run
+    out of time; sampling rate is configurable through other registers.
+    If it's higher than ITM throughput - overflow guaranteed. I was able
+    to use `pcsampl` tool to profile an application. Pretty nice.
+  - Exception tracing (DWT.CTRL.EXCTRCENA enabled) does not work on
+    F103; seems to work fine on F407. I was not able to parse SWO data
+    with `excevt` because few malformed packets in datastream cause
+    parser failure.
+  - WFI does not seem to affect the behaviour of tracing module on F407
+- Tools & URLs & Docs & Etc
+  - @bcantrill from probe-rs Matrix group seems to be knowledgable about
+    the topic of tracing; I wasn't able to talk to him though.
+  - @japaric isn't available lately
+  - ARMv7-M Architecture Reference Manual (DDI0403E) contains quite
+    elaborate specification of tracing, ITM, DWT, TPIU and packeting
+    format
+  - https://github.com/japaric/itm-tools
+    itm-tools utilizes following itm library
+  - https://github.com/rust-embedded/itm
+  - Notes:
+    - itm-tools *probably* is not forgiving enough for data stream; if
+      there's a lot of packet sources enabled like PC sampling +
+      exception tracing + instrumentation * timestamping chance of
+      malformed packets appearing increases (unless there's an
+      implementation error in `itm-decode` or/and something itm/dwt/tpi
+      is still somehow misconfigured)
+
+** TODO Publish this document on some public repo, hack.md, or similar.
+   Should be easy for others to contribute. (Github?)
+   Otherwise, resultant notes are likely to be in the final report.
+
+
+* Meeting at Grepit, [2021-01-28 Thu];
+- Resolved openocd issue: openocd locks up on FIFO usage. A regular file works.
+
+* Meeting at Grepit, [2021-02-04 Thu];
+Nothing.
+* Project plan
+** TODO Write the project background
+** DONE Test ~itm-tools~ examples
+   SCHEDULED: <2021-01-29 Fri>
+   Just go through them from head to tail on the Nucleo.
+   [[file:rtic-scope/src/main.rs][file:~/sync/uni/exjobb/rtic-scope/src/main.rs]]
+
+   Notes:
+   - The examples are for the STM32F1 family, but the Nucleo is a
+     STM32F4. Port.
+   - [[https://gitlab.henriktjader.com/pln/e7020e_2020/][Per's examples]] work with
+     #+BEGIN_SRC openocd-internal
+     monitor tpiu config internal /tmp/itm.fifo \
+         16000000 # must match core freq
+     #+END_SRC
+     But they do not work with =cat /dev/ttyACM0= using
+     #+BEGIN_SRC openocd-external
+     monitor tpiu config external uart off 16000000 2000000
+     #+END_SRC
+     There simply is no output.
+
+     *openocd-external does not work because I'm not using an external
+     USART.* I'll use =config internal ./itm.fifo for now.
+
+     =monitor mmw 0xE0001000 65536 4096= configures the DWT Control
+     Register for exception tracing. This we must port to Rust.
+
+     =monitor itm port 0 on= configures the availability of stimulus
+     ports. We need not port this (for now).
+** DONE Read up on probe-rs; start openocd -> probe-rs move         :@grepit:
+   CLOSED: [2021-02-04 Thu 15:29] SCHEDULED: <2021-02-02 Tue>
+   There are three main structures in ~probe-rs~. From each, the
+   subsequent structure can be acquired.
+   - Probe :: represents the physical probe in code form. Architecture agnostic.
+   - Session :: an established connection of a *Probe* to a chip.
+   - Core :: CPU manipulation.
+** STARTED Port openocd commands to Rust/probe-rs and replicate behavior
+   DEADLINE: <2021-02-11 Thu>
+   :LOGBOOK:
+   CLOCK: [2021-02-09 Tue 17:23]
+   CLOCK: [2021-02-09 Tue 15:03]--[2021-02-09 Tue 16:50] =>  1:47
+   CLOCK: [2021-02-08 Mon 22:23]--[2021-02-08 Mon 22:43] =>  0:20
+   CLOCK: [2021-02-08 Mon 21:39]--[2021-02-08 Mon 21:53] =>  0:14
+   CLOCK: [2021-02-08 Mon 16:16]--[2021-02-08 Mon 19:18] =>  3:02
+   :END:
+   We want to ditch openocd in favour of ~probe-ps~. This may require
+   some changes to the code base because ITM support is presently marked
+   as "alpha". In essence, we need to translate whatever openocd does
+   OOTB and the gdb commands (?) to a ~probe-rs~ environment.
+   - Later these commands will be ported to probe.rs
+   - Make sure to find manual references for all commands.
+
+   *Build with symbols and -O0 and reverse engineer script*
+   Functions of interest (when running as =openocd -d -f openocd.cfg=):
+   - =target_write_u32= in =target.c:2482=
+   - =adapter_write_memory= in =hla_target.c:783=
+   Breakpoint these and inspect during runtime. Are there any other
+   functions that write to target?
+   *Must we concern ourselves with what probe-rs already writes?*
+
+   *Below: what openocd does on startup*
+   - Debug -302 :: checks CPUID and floating-point features, host-side setup
+   - Debug 303-306 :: sets ~DHCSR = 0xa05f0001~; unlocks the register
+     with ~0xa05f~ and enables debug-mode.
+   - Debug 307-308 :: sets ~DEMCR = 0x01000000~; sets TRCENA: globally
+     enables all DWT and ITM units.
+   - *We go through Flash Patch and Break (FPB) unit*
+   - Debug 309-310 :: reads ~FP_CTRL = 0x00000260~ (Flash Patch control
+     register).
+   - Debug 311-327 :: (probably) nulls the FPB comparator registers.
+   - Debug 328-330 :: reads ~DWT_CTRL = 0x40000000~.
+   - Debug 331-333 :: Reads some CoreSight management register (offset
+     0xFBC, RO). Some ~DWT_DEVARCH = 0x0~.
+   - Debug 334-335 :: Nulls ~DWT_FUNCTIONn~, $n = 0, ... 3$; disables them.
+   - Debug 344-353 :: executes ~examine-end~:
+     #+BEGIN_SRC tcl
+       # Enable debug during low power modes (uses more power)
+       # DBGMCU_CR |= DBG_STANDBY | DBG_STOP | DBG_SLEEP
+       mmw 0xE0042004 0x00000007 0
+
+       # Stop watchdog counters during halt
+       # DBGMCU_APB1_FZ |= DBG_IWDG_STOP | DBG_WWDG_STOP
+       mmw 0xE0042008 0x00001800 0
+     #+END_SRC
+   - Debug 354-377 :: registers internal flash commands. Nothing
+     seemingly written to device.
+   - Debug 378-380 :: Initializes PLDs (?).
+   - Debug 381-382 :: Starts GDB server.
+   - Debug 383-- :: Shuts down.
+
+*** TODO Port =monitor tpiu config internal itm.bin uart off 16000000=
+    Alledgely, we should use
+    #+BEGIN_SRC Rust
+    Session::setup_svw({ Config { baudrate, clk }});
+    #+END_SRC
+    here. [[https://docs.rs/probe-rs/0.10.1/probe_rs/struct.Session.html#method.setup_swv][See documentation]].
+*** DONE Port =monitor mmw 0xE0001000 65536 4096=
+    CLOSED: [2021-02-09 Tue 17:40]
+    Writes the word (32 bits) =65536= to =4096= addresses starting at
+    address =0xE0001000=.
+
+    Documented as "EXCTRENA; clear PCSAMPLENA". Set these explicitly
+    instead.
+    See [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::799++0.05;;annot-799-1][DDI0403E_B_armv7m_arm.pdf: Page 799]].
+
+    probe-rs code has been written, but when we read-back our changes
+    the register holds the wrong data. Specifically, bit 16 is cleared
+    while it should be set.
+    - +Are we in the wrong state?+ Same behavior after =reset_and_halt=
+      and just a =halt=/=wait_for_halt=.
+    - There is a magical sequence openocd does that ensures ~DWT_CTRL~
+      is clocked and ready for use. This we must reimplement.
+
+    *DEMCR.TRCENA must be set first!* See [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::766++0.93][DDI0403E_B_armv7m_arm.pdf: Page 766]].
+
+*** TODO Port =monitor itm port 0 on=
+    Here we must [[file:~/code/openocd/src/target/armv7m_trace.c::armv7m->trace_config.itm_ter\[reg_idx\] |= (1 << port);][check the implementation]]. +Or perhaps we should just
+    strace instead?+
+
+    #+BEGIN_SRC C
+    // In handle_itm_port_command
+    uint8_t port = 0 % 32;
+    armv7m->trace_config.itm_ter[reg_idx] |= (1 << port);
+
+    // armv7m_trace_itm_config(target) is then run
+       for (unsigned int i = 0; i < 8; i++) {
+	       retval = target_write_u32(target, ITM_TER0 + i * 4,
+					 trace_config->itm_ter[i]);
+	       if (retval != ERROR_OK)
+		       return retval;
+       }
+    // further down
+    #define ITM_TER0 0xE0000E00
+    int target_write_u32(struct target *target, target_addr_t address, uint32_t value);
+    #+END_SRC
+
+    We may not need the whole command, just whatever that allows us to
+    get ITM packets to the host.
+
+    [[file:~/code/openocd/contrib/itmdump.c::* - Software trace (ITM): so-called "printf-style" application messaging][Valueable notes on ITM from Openocd]]
+
+** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
+
+** The start: low hanging fruit
+On task dispatch, send ITM package that contains task ID, scheduled
+time, and global timestamp. Or, as a proof of concept: just send the ITM
+package at the head of the task definition.
+
+** Later: RTIC Scope
+Host application that receives all ITM packages and ultimately present
+them in a human-readable format to the end-user.
+
+** In the end: task speficic tracing
+=#[task(trace = true)]= is the end-goal.
+
+** In the very end: some useful GUI?
+
+** RTIC Scope example applications
+- Reimplment the segway system in an RTIC application. Verify
+  that implementation /can/ match the underlying mathematical model. If
+  this is done, send the report to Khalid. Also: keep Lukas updated
+  about the presentation.
+  - Sidestep MATLAB/Octave completely and do all computations
+    symbolically in a Lisp?
+  - Another great example would be a reimplementation of the line
+    following robot done in mechatronical systems.
+  - Ask Khalid about appropriate real-time goals.
+  - Control theory + Lisp + RTIC kan bli riktigt bra blog-artiklar
+    annars. Eller separata pubs? Extrem applicering av org-mode.
