@@ -27,6 +27,15 @@ fn main() -> Result<(), Error> {
     core.halt(Duration::from_secs(5))?;
     assert!(core.core_halted()?);
 
+    // Check DEMCR
+    const DEMCR_ADDR: u32 = 0xE000EDFC;
+    let mut demcr: u32 = core.read_word_32(DEMCR_ADDR)?;
+    println!("before DEMCR: {:x}", demcr);
+    demcr |= 1 << 24;           // set TRCENA
+    core.write_word_32(DEMCR_ADDR, demcr)?;
+    let demcr: u32 = core.read_word_32(DEMCR_ADDR)?;
+    println!("readb  DEMCR: {:x}", demcr);
+
     // Enable ITM exception tracing
     {
         // Enable exception tracing
