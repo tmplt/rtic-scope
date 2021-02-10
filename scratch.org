@@ -314,7 +314,10 @@ Nothing.
 ** STARTED Port openocd commands to Rust/probe-rs and replicate behavior
    DEADLINE: <2021-02-11 Thu>
    :LOGBOOK:
-   CLOCK: [2021-02-09 Tue 17:23]
+   CLOCK: [2021-02-10 Wed 15:01]
+   CLOCK: [2021-02-09 Tue 20:20]--[2021-02-09 Tue 21:32] =>  1:12
+   CLOCK: [2021-02-09 Tue 18:40]--[2021-02-09 Tue 19:00] =>  0:20
+   CLOCK: [2021-02-09 Tue 17:23]--[2021-02-09 Tue 18:22] =>  0:59
    CLOCK: [2021-02-09 Tue 15:03]--[2021-02-09 Tue 16:50] =>  1:47
    CLOCK: [2021-02-08 Mon 22:23]--[2021-02-08 Mon 22:43] =>  0:20
    CLOCK: [2021-02-08 Mon 21:39]--[2021-02-08 Mon 21:53] =>  0:14
@@ -390,7 +393,8 @@ Nothing.
 
     *DEMCR.TRCENA must be set first!* See [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::766++0.93][DDI0403E_B_armv7m_arm.pdf: Page 766]].
 
-*** TODO Port =monitor itm port 0 on=
+*** DONE Port =monitor itm port 0 on=
+    CLOSED: [2021-02-10 Wed 15:56]
     Here we must [[file:~/code/openocd/src/target/armv7m_trace.c::armv7m->trace_config.itm_ter\[reg_idx\] |= (1 << port);][check the implementation]]. +Or perhaps we should just
     strace instead?+
 
@@ -415,6 +419,74 @@ Nothing.
     get ITM packets to the host.
 
     [[file:~/code/openocd/contrib/itmdump.c::* - Software trace (ITM): so-called "printf-style" application messaging][Valueable notes on ITM from Openocd]]
+
+    *Again, from =openocd -d4 -f openocd.cfg=*:
+    From a =target extended-remote :3333=.
+    - Info 380 :: gdb started
+    - Debug 381-389 :: Delete all breakpoints, watchpoints and halt target.
+    - Debug 390-438 :: Reads core register values (regs 0-22).
+    - Debug 439-635 :: RWs a lot to =0xe000edf4= and =0xe000edf8=, the
+      [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::651++6.19][Debug registers in the System Control Space in the Private
+      Peripheral Bus (PPB).]]
+      - 0xE000EDF4 :: [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::762++7.60][DCRSR/WO, Debug Core Register Selector Register]]
+      - 0xE000EDF8 :: [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::764++2.79][DCRDR/RW, Debug Core Register Data Register]]
+      *SR* is used to denote which core register or FPU-extension
+      register we want to read/write, *DR* contains the content of the
+      register we have selected. *DR* is a message-passing resource
+      between an external debugger and the debug agent running on the
+      processor. We only write to *SR* and read from *DR*.
+    - Debug 640-643 :: check PC and read device ID from =0xe0042000=.
+    - Debug 644-656 :: Read available flash memory and sectors, setup these
+      internally.
+    - Debug 657-679 :: Handle incoming GDB connection.
+      [[file:rtic-scope/playground/debug.log::Debug: 657 235035 gdb_server.c:1016 gdb_new_connection(): New GDB Connection: 1, Target stm32f4x.cpu, state: halted][Continue from here]].
+    - 680-830 :: repeat stuff
+
+**** After a =monitor itm port 0 on=:
+    [[file:~/code/openocd/src/target/armv7m_trace.c::retval = target_write_u32(target, ITM_LAR, ITM_LAR_KEY);][partial source]]
+
+    Write key to ~ITM_LAR~ to unlock CoreSight registers. See
+    [[pdf:~/exjobb/docs/coresight_v3_0_architecture_specification_IHI0029E.pdf::243++2.33][coresight_v3_0_architecture_specification_IHI0029E.pdf: Page 243]].
+    *Deprecated starting from CoreSight v3.0*. Check ~LSR.SLI~ whether
+    ~LAR~ is implemented or not.
+    The address prefix =0xe0000= is seemingly *not documented* in the
+    same document. /Where is it documented?/
+    #+BEGIN_SRC fundamental
+      Debug: 832 8647781 command.c:146 script_debug(): command - itm port 0 on
+      Debug: 834 8647782 target.c:2482 target_write_u32(): address: 0xe0000fb0, value: 0xc5acce55
+      Debug: 835 8647782 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000fb0 4 1
+    #+END_SRC
+
+    ~ITM_TCR~, Trace Control Register. See [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::776++4.61][DDI0403E_B_armv7m_arm.pdf: Page 776]].
+    Sets
+    - ITMENA :: master enable for ITM
+    - TXENA :: forward DWT event packets to ITM
+    - TraceBusID :: must be non-zero if multiple sources are to be used.
+    #+BEGIN_SRC fundamental
+      Debug: 836 8647782 target.c:2482 target_write_u32(): address: 0xe0000e80, value: 0x00010009
+      Debug: 837 8647782 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e80 4 1
+    #+END_SRC
+
+    ~ITM_TERx~, Trace Enable Register(s). See [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::774++9.77][DDI0403E_B_armv7m_arm.pdf:
+    Page 774]]. Enables stimulus port 0 and disables all other.
+      #+begin_src fundamental
+      Debug: 838 8647783 target.c:2482 target_write_u32(): address: 0xe0000e00, value: 0x00000001
+      Debug: 839 8647783 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e00 4 1
+      Debug: 840 8647783 target.c:2482 target_write_u32(): address: 0xe0000e04, value: 0x00000000
+      Debug: 841 8647783 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e04 4 1
+      Debug: 842 8647783 target.c:2482 target_write_u32(): address: 0xe0000e08, value: 0x00000000
+      Debug: 843 8647783 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e08 4 1
+      Debug: 844 8647784 target.c:2482 target_write_u32(): address: 0xe0000e0c, value: 0x00000000
+      Debug: 845 8647784 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e0c 4 1
+      Debug: 846 8647784 target.c:2482 target_write_u32(): address: 0xe0000e10, value: 0x00000000
+      Debug: 847 8647784 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e10 4 1
+      Debug: 848 8647785 target.c:2482 target_write_u32(): address: 0xe0000e14, value: 0x00000000
+      Debug: 849 8647785 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e14 4 1
+      Debug: 850 8647785 target.c:2482 target_write_u32(): address: 0xe0000e18, value: 0x00000000
+      Debug: 851 8647785 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e18 4 1
+      Debug: 852 8647785 target.c:2482 target_write_u32(): address: 0xe0000e1c, value: 0x00000000
+      Debug: 853 8647785 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0000e1c 4 1
+      #+end_src
 
 ** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
 
