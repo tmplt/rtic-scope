@@ -275,6 +275,11 @@ their visibility at a trace output port.]]
 
 * Meeting at Grepit, [2021-02-04 Thu];
 Nothing.
+
+* Meeting at Grepit, [2021-02-11 Thu];
+  - Probably a good idea to greenfield the any impl first.
+  - probe-rs ITM API seems lackluster. Propose a new one if it comes up.
+
 * Project plan
 ** TODO Write the project background
 ** DONE Test ~itm-tools~ examples
@@ -373,7 +378,70 @@ Nothing.
     #+BEGIN_SRC Rust
     Session::setup_svw({ Config { baudrate, clk }});
     #+END_SRC
-    here. [[https://docs.rs/probe-rs/0.10.1/probe_rs/struct.Session.html#method.setup_swv][See documentation]].
+    or something akin to it. [[https://docs.rs/probe-rs/0.10.1/probe_rs/struct.Session.html#method.setup_swv][See documentation]].
+
+    #+begin_src
+    Debug: 855 8837285 command.c:146 script_debug(): command - tpiu config internal itm.bin uart off 16000000
+    Debug: 857 8837286 stlink_usb.c:1852 stlink_usb_trace_disable(): Tracing: disable
+    Debug: 858 8837286 stlink_usb.c:1886 stlink_usb_trace_enable(): Tracing: recording at 2000000Hz
+    #+end_src
+
+    ~TPIU_CSPSR~, Current Parallel Port Size Register. See
+    [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::810++10.99][DDI0403E_B_armv7m_arm.pdf: Page 810]]. Also [[pdf:~/exjobb/docs/RM0368.pdf::837++0.00][RM0368.pdf: Page 837]].
+    - Sets bit 1 :: trace port size = 1.
+    #+begin_src
+    Debug: 859 8837286 target.c:2482 target_write_u32(): address: 0xe0040004, value: 0x00000001
+    Debug: 860 8837286 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0040004 4 1
+    #+end_src
+
+    ~TPIU_ACPR~, Asynchronous Clock Prescalar Register. See
+    [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::810++10.99][DDI0403E_B_armv7m_arm.pdf: Page 810]].
+    - Sets :: sets the baud rate of the /Serial Wire Output/ (SWO) to
+      Asynchronous_Reference_Clock/(SWOSCALAR +1).
+    #+begin_src
+    Debug: 861 8837286 target.c:2482 target_write_u32(): address: 0xe0040010, value: 0x00000007
+    Debug: 862 8837286 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0040010 4 1
+    #+end_src
+
+    ~TPIU_SPPR~, Selected Pin Protocol Register. See
+    [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::811++0.45][DDI0403E_B_armv7m_arm.pdf: Page 811]].
+    Select the protocol used for the trace output.
+    - Sets ~TXMODE=10~ :: Asynchronous SWO, using NRZ encoding.
+    #+begin_src
+    Debug: 863 8837287 target.c:2482 target_write_u32(): address: 0xe00400f0, value: 0x00000002
+    Debug: 864 8837287 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe00400f0 4 1
+    #+end_src
+
+    ~TPIU_FFCR~, Formatter and Flush Control Register. See
+    [[pdf:~/exjobb/docs/arm-cortex-m4-trm.pdf::95++8.49][arm-cortex-m4-trm.pdf: Page 95]].
+    Clears ~EnFCont~, disables continuous formatting. That is, bypasses
+    a formatter. *Only ITM, DWT packets is passed through. ETM packets
+    are discarded*.
+    #+begin_src
+    Debug: 865 8837287 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe0040304 4 1
+    Debug: 866 8837287 target.c:2394 target_read_u32(): address: 0xe0040304, value: 0x00000102
+    Debug: 867 8837287 target.c:2482 target_write_u32(): address: 0xe0040304, value: 0x00000100
+    Debug: 868 8837287 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0040304 4 1
+    #+end_src
+
+    ~DBGMCU_CR~, Debug MCU configuration register, mapped on the
+    External PPB. See [[pdf:~/exjobb/docs/RM0368.pdf::828++2.21][RM0368.pdf: Page 828]].
+    - Clears ~DBG_SLEEP~ :: all clocks are disabled in STOP mode.
+    - Sets ~TRACE_IOEN~ :: TRACE pin assignment to default mode and size
+      (~TRACE_MODE=00~: TRACE pin assignment for Asynchronous mode).
+    #+begin_src
+    Debug: 869 8837288 target.c:1626 target_call_event_callbacks(): target event 28 (trace-config) for core stm32f4x.cpu
+    Debug: 870 8837288 target.c:4570 target_handle_event(): target(0): stm32f4x.cpu (hla_target) event: 28 (trace-config) action:
+            # Set TRACE_IOEN; TRACE_MODE is set to async; when using sync
+            # change this value accordingly to configure trace pins
+            # assignment
+            mmw 0xE0042004 0x00000020 0
+
+    Debug: 871 8837288 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe0042004 4 1
+    Debug: 872 8837288 command.c:146 script_debug(): command - mww 0xE0042004 39
+    Debug: 874 8837289 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe0042004 4 1
+    #+end_src
+
 *** DONE Port =monitor mmw 0xE0001000 65536 4096=
     CLOSED: [2021-02-09 Tue 17:40]
     Writes the word (32 bits) =65536= to =4096= addresses starting at
@@ -449,8 +517,7 @@ Nothing.
     [[pdf:~/exjobb/docs/coresight_v3_0_architecture_specification_IHI0029E.pdf::243++2.33][coresight_v3_0_architecture_specification_IHI0029E.pdf: Page 243]].
     *Deprecated starting from CoreSight v3.0*. Check ~LSR.SLI~ whether
     ~LAR~ is implemented or not.
-    The address prefix =0xe0000= is seemingly *not documented* in the
-    same document. /Where is it documented?/
+    Target-documented in [[pdf:~/exjobb/docs/RM0368.pdf::825++1.15][RM0368.pdf: Page 825]].
     #+BEGIN_SRC fundamental
       Debug: 832 8647781 command.c:146 script_debug(): command - itm port 0 on
       Debug: 834 8647782 target.c:2482 target_write_u32(): address: 0xe0000fb0, value: 0xc5acce55
