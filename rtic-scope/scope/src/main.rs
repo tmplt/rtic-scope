@@ -1,11 +1,17 @@
-use probe_rs::{Core, MemoryInterface, Probe};
+use anyhow::{anyhow, Context, Result};
+use probe_rs::{
+    flashing::{self, Format},
+    Core, MemoryInterface, Probe,
+};
+use probe_rs_cli_util;
+use std::path::PathBuf;
 use std::time::Duration;
 
-fn main() -> Result<(), probe_rs::Error> {
+fn main() -> Result<()> {
     // Get a list of all available debug probes
     let probes = Probe::list_all();
     if probes.is_empty() {
-        return Err(probe_rs::Error::UnableToOpenProbe("No probes available"));
+        return Err(anyhow!("No probes available"));
     }
     println!("Found {} probe(s): {:#?}", probes.len(), probes);
 
@@ -15,9 +21,11 @@ fn main() -> Result<(), probe_rs::Error> {
 
     // Attach to a chip
     println!("Attaching...");
-    let mut session = probe.attach("stm32")?;
+    let mut session = probe.attach_under_reset("stm32f4")?;
     // session.setup_swv(...)
     println!("Found {} core(s).", session.list_cores().len());
+
+    flash_program(&mut session)?;
 
     // Select a core
     let mut core = session.core(0)?;
@@ -99,11 +107,21 @@ fn main() -> Result<(), probe_rs::Error> {
     Ok(())
 }
 
-fn ensure_write_word_32(core: &mut Core, addr: u32, val: u32) -> Result<(), probe_rs::Error> {
+fn ensure_write_word_32(core: &mut Core, addr: u32, val: u32) -> Result<()> {
     core.write_word_32(addr, val)?;
     if core.read_word_32(addr)? != val {
-        return Err(probe_rs::Error::UnableToOpenProbe("readback failed"));
+        return Err(anyhow!("readback of register {} is unexpected!"));
     }
 
     Ok(())
+}
+
+fn flash_program(session: &mut probe_rs::Session) -> Result<()> {
+    let work_dir = PathBuf::from("../playground/");
+    // XXX always debug
+    let path = probe_rs_cli_util::build_artifact(
+        &work_dir,
+        &["--example".to_string(), "tracing".to_string()],
+    )?;
+    flashing::download_file(session, &path, Format::Elf).context("failed to flash target")
 }
