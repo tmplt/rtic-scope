@@ -34,6 +34,14 @@ fn main() -> Result<()> {
     core.halt(Duration::from_secs(5))?;
     assert!(core.core_halted()?);
 
+    // General debug settings
+    {
+        const DBGMCU_APB1_FZ_ADDR: u32 = 0xE0042008;
+        let mut dbgmcu_apb1_fz = core.read_word_32(DBGMCU_APB1_FZ_ADDR)?;
+        dbgmcu_apb1_fz |= 0x1800; // stop watchdog counters during halt
+        ensure_write_word_32(&mut core, DBGMCU_APB1_FZ_ADDR, dbgmcu_apb1_fz)?;
+    }
+
     // Enable TRACE
     {
         const DEMCR_ADDR: u32 = 0xE000EDFC;
