@@ -23,9 +23,36 @@ fn main() -> Result<(), probe_rs::Error> {
     let mut core = session.core(0)?;
 
     // Halt the attached core
-    // XXX do we need to loop this?
     core.halt(Duration::from_secs(5))?;
     assert!(core.core_halted()?);
+
+    // monitor tpiu config internal itm.bin uart off 16000000
+    {
+        // Set trace port size = 1
+        const TPIU_CSPSR_ADDR: u32 = 0xe0040004;
+        ensure_write_word_32(&mut core, TPIU_CSPSR_ADDR, 0x1)?;
+
+        // Configure clock prescalar and thus SWO baud rate
+        const TPIU_ACPR_ADDR: u32 = 0xe0040010;
+        ensure_write_word_32(&mut core, TPIU_ACPR_ADDR, 0x7)?;
+
+        // Configure trace output protocol: Async SWO, NRZ encoding
+        const TPIU_SPPR_ADDR: u32 = 0xe00400f0;
+        ensure_write_word_32(&mut core, TPIU_SPPR_ADDR, 0x2)?;
+
+        // Configure TPIU formatter
+        const TPIU_FFCR_ADDR: u32 = 0xe0040304;
+        let mut tpiu_ffcr = core.read_word_32(TPIU_FFCR_ADDR)?;
+        tpiu_ffcr &= !(1 << 1); // clear EnFCont; drops ETM packets
+        ensure_write_word_32(&mut core, TPIU_FFCR_ADDR, tpiu_ffcr)?;
+
+        // Configure debug settings
+        const DBGMCU_CR_ADDR: u32 = 0xE0042004;
+        let mut dbgmcu_cr = core.read_word_32(DBGMCU_CR_ADDR)?;
+        dbgmcu_cr |= 1 << 5; // set TRACE_IOEN; use default trace pin mode and TRACEDATA size
+        dbgmcu_cr &= !(1 << 0); // clear DBG_SLEEP: all clocks are disabled in STOP mode
+        ensure_write_word_32(&mut core, DBGMCU_CR_ADDR, dbgmcu_cr)?;
+    }
 
     // Check DEMCR
     const DEMCR_ADDR: u32 = 0xE000EDFC;
