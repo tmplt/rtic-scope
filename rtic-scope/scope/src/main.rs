@@ -26,6 +26,14 @@ fn main() -> Result<(), probe_rs::Error> {
     core.halt(Duration::from_secs(5))?;
     assert!(core.core_halted()?);
 
+    // Enable TRACE
+    {
+        const DEMCR_ADDR: u32 = 0xE000EDFC;
+        let mut demcr: u32 = core.read_word_32(DEMCR_ADDR)?;
+        demcr |= 1 << 24; // set TRCENA
+        ensure_write_word_32(&mut core, DEMCR_ADDR, demcr)?;
+    }
+
     // monitor tpiu config internal itm.bin uart off 16000000
     {
         // Set trace port size = 1
@@ -54,37 +62,31 @@ fn main() -> Result<(), probe_rs::Error> {
         ensure_write_word_32(&mut core, DBGMCU_CR_ADDR, dbgmcu_cr)?;
     }
 
-    // Check DEMCR
-    const DEMCR_ADDR: u32 = 0xE000EDFC;
-    let mut demcr: u32 = core.read_word_32(DEMCR_ADDR)?;
-    demcr |= 1 << 24; // set TRCENA
-    ensure_write_word_32(&mut core, DEMCR_ADDR, demcr)?;
-
-    // Enable ITM exception tracing
+    // monitor mmw 0xE0001000 65536 4096
     {
-        // Enable exception tracing
         const DWT_CTRL_ADDR: u32 = 0xE0001000;
         let mut ctrl: u32 = core.read_word_32(DWT_CTRL_ADDR)?;
         ctrl |= 1 << 16; // set EXCTRENA
         ctrl &= !(1 << 12); // clear PCSAMLENA
         ensure_write_word_32(&mut core, DWT_CTRL_ADDR, ctrl)?;
+    }
 
-        // openocd: monitor itm port 0 on
-
+    // monitor itm port 0 on
+    {
         // Before we do anything ITM we must first unlock the registers.
         // TODO only do this if LAR is implemented.
         const ITM_LAR: u32 = 0xe0000fb0;
         const ITM_LAR_KEY: u32 = 0xc5acce55;
         core.write_word_32(ITM_LAR, ITM_LAR_KEY)?;
 
-        // ITM_TCR
+        // Configure trace control register
         const ITM_TCR_ADDR: u32 = 0xE0000E80;
         let itm_tcr = (1 << 0)  // ITMENA; master enable
             | (1 << 3)          // TXENA; forward DWT event packets to ITM
             | (1 << 16); // TraceBusID = 1
         ensure_write_word_32(&mut core, ITM_TCR_ADDR, itm_tcr)?;
 
-        // ITM_TER
+        // Enable ITM stimulus port 0, disable all other.
         const ITM_TER0_ADDR: u32 = 0xE0000E00;
         const ITM_TER1_ADDR: u32 = 0xE0000E04;
         const ITM_TER7_ADDR: u32 = 0xE0000E1C;
