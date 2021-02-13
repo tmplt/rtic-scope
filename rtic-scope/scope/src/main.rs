@@ -1,11 +1,14 @@
 use anyhow::{anyhow, Context, Result};
 use probe_rs::{
+    architecture::arm::swo::SwoConfig,
     flashing::{self, Format},
     Core, MemoryInterface, Probe,
 };
 use probe_rs_cli_util;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::fs::File;
+use std::io::Write;
 
 fn main() -> Result<()> {
     // Get a list of all available debug probes
@@ -25,7 +28,11 @@ fn main() -> Result<()> {
     // session.setup_swv(...)
     println!("Found {} core(s).", session.list_cores().len());
 
-    flash_program(&mut session)?;
+    session.setup_swv(
+        &SwoConfig::new(16_000_000)
+            .set_baud(2_000_000)
+            .set_continuous_formatting(false)
+    )?;
 
     // Select a core
     let mut core = session.core(0)?;
@@ -109,6 +116,19 @@ fn main() -> Result<()> {
         ensure_write_word_32(&mut core, ITM_TER0_ADDR, 1 << 0)?; // enable port 0
         for addr in (ITM_TER1_ADDR..=ITM_TER7_ADDR).step_by(0x4) {
             ensure_write_word_32(&mut core, addr, 0)?; // disable all other
+        }
+    }
+
+    core.run()?;
+    drop(core);
+
+    flash_program(&mut session)?;
+
+    let mut f = File::create("/tmp/itm.bin")?;
+
+    while let Ok(bytes) = session.read_swo() {
+        if bytes.len() > 0 {
+            f.write_all(&bytes)?;
         }
     }
 
