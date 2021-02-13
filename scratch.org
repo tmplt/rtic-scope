@@ -567,8 +567,12 @@ Nothing.
     Target flashing is done via =probe_rs_cli_util::download_file=.
     A function like it should be available in ~probe-rs~.
 
-*** TODO Read ITM packets and record to file
+*** DONE Read ITM packets and record to file
+    CLOSED: [2021-02-13 Sat 23:10]
     :LOGBOOK:
+    CLOCK: [2021-02-13 Sat 22:23]--[2021-02-13 Sat 23:10] =>  0:47
+    CLOCK: [2021-02-13 Sat 16:52]--[2021-02-13 Sat 17:16] =>  0:24
+    CLOCK: [2021-02-13 Sat 03:23]--[2021-02-13 Sat 04:35] =>  1:12
     CLOCK: [2021-02-12 Fri 18:36]--[2021-02-12 Fri 19:05] =>  0:29
     :END:
     All commands are now ported to our ad-hoc scope. What we need to do
@@ -871,7 +875,61 @@ Nothing.
     Debug: 2239 23178 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 1
     #+end_src
 
+    [[file:~/code/openocd/src/jtag/drivers/stlink_usb.c][It's not immidiately obvious how openocd records the ITM packets.]]
+
+    [[file:~/code/probe-rs/probe-rs/src/session.rs::pub fn setup_swv(&mut self, config: &SwoConfig) -> Result<(), Error> {][~probe_rs~ contains some better leads]]: When calling =setup_swv= we
+    do three things:
+    1. Configure SWO on the probe
+       1. +Starts receiving packets, somehow...+ Just tells the probe to
+          recv. We may need an external UART adapter to recv ITM packets
+          to host. Checkup with matix chat.
+    2. Enable tracing on the target
+       1. Sets ~DEMCR.TRCENA~
+    3. [[file:~/code/probe-rs/probe-rs/src/architecture/arm/component/mod.rs::pub fn setup_swv(][Configure SWV on the target]]
+       1. Sets ~DEMCR.TRCENA~
+       2. Performs vendor-specific SWV setup
+       3. Configures TPIU
+       4. Configures ITM
+       5. Configures DWT
+
+
+    From OOTB of ~probe-rs~ with
+    #+begin_src rust
+      session.setup_swv(
+            &SwoConfig::new(16_000_000)
+                .set_baud(2_000_000)
+                .set_continuous_formatting(false)
+      )?;
+
+      flash_program(&mut session)?;
+
+      let mut f = File::create("/tmp/itm.bin")?;
+      while let Ok(bytes) = session.read_swo() {
+          if bytes.len() > 0 {
+              f.write_all(&bytes)?;
+          }
+      }
+    #+end_src
+    We recv ITM packets, but seemingly no DWT packets. But if we combine
+    the above with all other register writes, we get the exception
+    traces.
+
+    This is implemented in probe-rs:
+    #+begin_src rust
+      session.setup_swv(
+          &SwoConfig::new(16_000_000)
+              .set_baud(2_000_000)
+              .set_continuous_formatting(false)
+      )?;
+
+      let component = session.get_arm_component()?;
+      let mut core = session.core(0)?;
+      Dwt::new(&mut core, &component).enable_exception_trace()?;
+    #+end_src
+
 ** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
+   We only concern ourselves with exception tracing for now, so only
+   show how that is done.
 
 ** The start: low hanging fruit
 On task dispatch, send ITM package that contains task ID, scheduled
