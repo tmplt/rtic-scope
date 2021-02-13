@@ -578,287 +578,284 @@ Nothing.
 
     After setting everything up and running =continue=:
     #+begin_src
-    Debug: 2060 19086 gdb_server.c:3267 gdb_input_inner(): received packet: 'Pf=94010008'
-    Debug: 2061 78622 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont?'
-    Debug: 2062 78622 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont;c'
-    Debug: 2063 78622 gdb_server.c:2740 gdb_handle_vcont_packet(): target stm32f4x.cpu continue
-    Debug: 2064 78622 target.c:1626 target_call_event_callbacks(): target event 3 (resume-start) for core stm32f4x.cpu
-    Debug: 2065 78623 hla_target.c:615 adapter_resume(): adapter_resume 1 0x00000000 0 0
-    Debug: 2066 78623 target.c:1978 target_free_all_working_areas_restore(): freeing all working areas
-    Debug: 2067 78623 target.c:1741 print_wa_layout():    0x20000000-0x20007fff (32768 bytes)
-    Debug: 2068 78623 target.c:2482 target_write_u32(): address: 0xe000edfc, value: 0x01000000
-    Debug: 2069 78623 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edfc 4 1
-    Debug: 2070 78623 armv7m.c:148 armv7m_restore_context():
-    Debug: 2071 78623 armv7m.c:280 armv7m_write_core_reg(): write core reg 15 value 0x8000194
-    Debug: 2072 78623 hla_target.c:149 adapter_store_core_reg_u32(): adapter_store_core_reg_u32
-    Debug: 2073 78624 hla_target.c:167 adapter_store_core_reg_u32(): write core reg 15 value 0x8000194
-    Debug: 2074 78624 target.c:2482 target_write_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2075 78624 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf8 4 1
-    Debug: 2076 78624 target.c:1626 target_call_event_callbacks(): target event 2 (resumed) for core stm32f4x.cpu
-    Debug: 2077 78624 target.c:1626 target_call_event_callbacks(): target event 4 (resume-end) for core stm32f4x.cpu
-    Debug: 2078 78624 target.c:1626 target_call_event_callbacks(): target event 7 (gdb-start) for core stm32f4x.cpu
-    Debug: 2079 78725 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2080 78726 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2081 78726 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2082 78727 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 0  value 0x0
-    Debug: 2083 78727 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2084 78727 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 1  value 0x0
-    Debug: 2085 78727 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2086 78728 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 2  value 0x8
-    Debug: 2087 78728 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2088 78728 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 3  value 0x100
-    Debug: 2089 78728 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2090 78729 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 4  value 0x0
-    Debug: 2091 78729 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2092 78729 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 5  value 0x0
-    Debug: 2093 78729 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2094 78730 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 6  value 0x0
-    Debug: 2095 78730 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2096 78731 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 7  value 0x20007f40
-    Debug: 2097 78731 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2098 78731 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 8  value 0x0
-    Debug: 2099 78731 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2100 78732 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 9  value 0x0
-    Debug: 2101 78732 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2102 78732 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 10  value 0x0
-    Debug: 2103 78732 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2104 78733 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 11  value 0x0
-    Debug: 2105 78733 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2106 78733 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 12  value 0x0
-    Debug: 2107 78733 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2108 78734 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 13  value 0x20007f38
-    Debug: 2109 78734 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2110 78734 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 14  value 0x80006d3
-    Debug: 2111 78734 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2112 78735 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 15  value 0x8000ae6
-    Debug: 2113 78735 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2114 78736 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 16  value 0x61000016
-    Debug: 2115 78736 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2116 78736 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 17  value 0x20007f38
-    Debug: 2117 78736 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2118 78737 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 18  value 0x0
-    Debug: 2119 78737 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2120 78737 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 19 value 0x0
-    Debug: 2121 78737 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2122 78738 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 20 value 0x0
-    Debug: 2123 78738 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2124 78738 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 21 value 0x0
-    Debug: 2125 78738 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2126 78739 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 22 value 0x0
-    Debug: 2127 78739 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2128 78739 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000040
-    Debug: 2129 78739 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2130 78739 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2131 78740 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2132 78740 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S0  value 0x0
-    Debug: 2133 78740 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2134 78740 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000041
-    Debug: 2135 78740 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2136 78740 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2137 78741 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2138 78741 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S1  value 0x0
-    Debug: 2139 78741 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2140 78741 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000042
-    Debug: 2141 78741 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2142 78741 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2143 78742 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2144 78742 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S2  value 0x0
-    Debug: 2145 78742 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2146 78742 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000043
-    Debug: 2147 78742 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2148 78742 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2149 78743 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2150 78743 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S3  value 0x0
-    Debug: 2151 78743 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2152 78743 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000044
-    Debug: 2153 78743 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2154 78743 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2155 78744 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2156 78744 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S4  value 0x0
-    Debug: 2157 78744 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2158 78744 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000045
-    Debug: 2159 78744 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2160 78745 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2161 78745 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2162 78745 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S5  value 0x0
-    Debug: 2163 78745 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2164 78745 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000046
-    Debug: 2165 78745 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2166 78746 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2167 78746 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2168 78746 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S6  value 0x0
-    Debug: 2169 78746 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2170 78746 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000047
-    Debug: 2171 78746 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2172 78747 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2173 78748 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2174 78748 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S7  value 0x0
-    Debug: 2175 78748 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2176 78748 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000048
-    Debug: 2177 78748 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2178 78748 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2179 78749 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2180 78749 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S8  value 0x0
-    Debug: 2181 78749 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2182 78749 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000049
-    Debug: 2183 78749 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2184 78749 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2185 78750 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2186 78750 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S9  value 0x0
-    Debug: 2187 78750 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2188 78750 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004a
-    Debug: 2189 78750 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2190 78750 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2191 78751 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2192 78751 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S10  value 0x0
-    Debug: 2193 78751 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2194 78751 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004b
-    Debug: 2195 78751 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2196 78751 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2197 78752 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2198 78752 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S11  value 0x0
-    Debug: 2199 78752 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2200 78752 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004c
-    Debug: 2201 78752 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2202 78753 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2203 78753 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2204 78753 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S12  value 0x0
-    Debug: 2205 78753 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2206 78753 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004d
-    Debug: 2207 78753 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2208 78754 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2209 78754 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2210 78754 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S13  value 0x0
-    Debug: 2211 78754 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2212 78754 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004e
-    Debug: 2213 78754 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2214 78755 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2215 78755 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2216 78755 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S14  value 0x0
-    Debug: 2217 78755 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2218 78755 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004f
-    Debug: 2219 78755 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2220 78756 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2221 78756 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2222 78756 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S15  value 0x0
-    Debug: 2223 78756 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2224 78756 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000050
-    Debug: 2225 78756 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2226 78757 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2227 78757 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2228 78757 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S16  value 0x0
-    Debug: 2229 78757 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2230 78757 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000051
-    Debug: 2231 78757 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2232 78758 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2233 78759 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2234 78759 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S17  value 0x0
-    Debug: 2235 78759 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2236 78759 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000052
-    Debug: 2237 78759 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2238 78759 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2239 78760 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2240 78760 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S18  value 0x0
-    Debug: 2241 78760 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2242 78760 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000053
-    Debug: 2243 78760 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2244 78761 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2245 78761 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2246 78761 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S19  value 0x0
-    Debug: 2247 78761 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2248 78761 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000054
-    Debug: 2249 78761 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2250 78761 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2251 78762 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2252 78762 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S20  value 0x0
-    Debug: 2253 78762 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2254 78762 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000055
-    Debug: 2255 78762 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2256 78762 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2257 78763 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2258 78763 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S21  value 0x0
-    Debug: 2259 78763 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2260 78763 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000056
-    Debug: 2261 78763 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2262 78764 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2263 78764 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2264 78764 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S22  value 0x0
-    Debug: 2265 78764 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2266 78764 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000057
-    Debug: 2267 78764 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2268 78765 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2269 78765 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2270 78765 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S23  value 0x0
-    Debug: 2271 78765 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2272 78765 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000058
-    Debug: 2273 78765 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2274 78766 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2275 78766 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2276 78766 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S24  value 0x0
-    Debug: 2277 78766 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2278 78766 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000059
-    Debug: 2279 78858 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2280 78858 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2281 78859 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2282 78859 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S25  value 0x0
-    Debug: 2283 78859 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2284 78859 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005a
-    Debug: 2285 78859 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2286 78860 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2287 78860 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2288 78860 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S26  value 0x0
-    Debug: 2289 78860 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2290 78860 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005b
-    Debug: 2291 78860 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2292 78861 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2293 78861 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2294 78861 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S27  value 0x0
-    Debug: 2295 78861 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2296 78861 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005c
-    Debug: 2297 78861 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2298 78862 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2299 78863 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2300 78863 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S28  value 0x0
-    Debug: 2301 78863 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2302 78863 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005d
-    Debug: 2303 78863 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2304 78863 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2305 78863 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2306 78863 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S29  value 0x0
-    Debug: 2307 78863 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2308 78863 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005e
-    Debug: 2309 78863 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2310 78864 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2311 78865 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2312 78865 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S30  value 0x0
-    Debug: 2313 78865 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2314 78865 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005f
-    Debug: 2315 78865 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2316 78865 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2317 78866 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2318 78866 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S31  value 0x0
-    Debug: 2319 78866 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
-    Debug: 2320 78866 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000021
-    Debug: 2321 78866 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
-    Debug: 2322 78866 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
-    Debug: 2323 78867 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
-    Debug: 2324 78867 hla_target.c:85 adapter_load_core_reg_u32(): load from FPSCR  value 0x0
-    Debug: 2325 78867 hla_target.c:452 adapter_debug_entry(): entered debug state in core mode: Handler at PC 0x08000ae6, target->state: halted
-    Debug: 2326 78867 target.c:1626 target_call_event_callbacks(): target event 0 (gdb-halt) for core stm32f4x.cpu
-    Debug: 2327 78867 target.c:1626 target_call_event_callbacks(): target event 1 (halted) for core stm32f4x.cpu
-    Debug: 2328 78867 target.c:1626 target_call_event_callbacks(): target event 8 (gdb-end) for core stm32f4x.cpu
-    Debug: 2329 78867 hla_target.c:497 adapter_poll(): halted: PC: 0x08000ae6
-    Debug: 2330 78868 gdb_server.c:3267 gdb_input_inner(): received packet: 'g'
-    Debug: 2331 78869 gdb_server.c:3267 gdb_input_inner(): received packet: 'qXfer:threads:read::0,1000'
-    Debug: 2332 78869 gdb_server.c:3267 gdb_input_inner(): received packet: 'm8000ae6,4'
-    Debug: 2333 78869 gdb_server.c:1456 gdb_read_memory_packet(): addr: 0x0000000008000ae6, len: 0x00000004
-    Debug: 2334 78869 target.c:2248 target_read_buffer(): reading buffer of 4 byte at 0x08000ae6
-    Debug: 2335 78869 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 2
-    Debug: 2336 78872 gdb_server.c:3267 gdb_input_inner(): received packet: 'm8000ae6,2'
-    Debug: 2337 78872 gdb_server.c:1456 gdb_read_memory_packet(): addr: 0x0000000008000ae6, len: 0x00000002
-    Debug: 2338 78872 target.c:2248 target_read_buffer(): reading buffer of 2 byte at 0x08000ae6
-    Debug: 2339 78872 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 1
+    Debug: 1964 22935 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont?'
+    Debug: 1965 22936 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont;c'
+    Debug: 1966 22936 gdb_server.c:2740 gdb_handle_vcont_packet(): target stm32f4x.cpu continue
+    Debug: 1967 22936 target.c:1626 target_call_event_callbacks(): target event 3 (resume-start) for core stm32f4x.cpu
+    Debug: 1968 22936 hla_target.c:615 adapter_resume(): adapter_resume 1 0x00000000 0 0
+    Debug: 1969 22936 target.c:1978 target_free_all_working_areas_restore(): freeing all working areas
+    Debug: 1970 22936 target.c:1741 print_wa_layout():    0x20000000-0x20007fff (32768 bytes)
+    Debug: 1971 22936 target.c:2482 target_write_u32(): address: 0xe000edfc, value: 0x01000000
+    Debug: 1972 22936 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edfc 4 1
+    Debug: 1973 22936 armv7m.c:148 armv7m_restore_context():
+    Debug: 1974 22936 target.c:2482 target_write_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 1975 22936 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf8 4 1
+    Debug: 1976 22937 target.c:1626 target_call_event_callbacks(): target event 2 (resumed) for core stm32f4x.cpu
+    Debug: 1977 22937 target.c:1626 target_call_event_callbacks(): target event 4 (resume-end) for core stm32f4x.cpu
+    Debug: 1978 22937 target.c:1626 target_call_event_callbacks(): target event 7 (gdb-start) for core stm32f4x.cpu
+    Debug: 1979 23039 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 1980 23039 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 1981 23039 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1982 23040 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 0  value 0x0
+    Debug: 1983 23040 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1984 23041 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 1  value 0x0
+    Debug: 1985 23041 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1986 23041 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 2  value 0x8
+    Debug: 1987 23041 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1988 23042 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 3  value 0x100
+    Debug: 1989 23042 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1990 23042 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 4  value 0x0
+    Debug: 1991 23042 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1992 23043 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 5  value 0x0
+    Debug: 1993 23043 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1994 23044 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 6  value 0x0
+    Debug: 1995 23044 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1996 23044 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 7  value 0x20007f40
+    Debug: 1997 23044 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 1998 23045 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 8  value 0x0
+    Debug: 1999 23045 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2000 23046 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 9  value 0x0
+    Debug: 2001 23046 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2002 23046 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 10  value 0x0
+    Debug: 2003 23046 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2004 23047 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 11  value 0x0
+    Debug: 2005 23047 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2006 23048 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 12  value 0x0
+    Debug: 2007 23048 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2008 23048 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 13  value 0x20007f38
+    Debug: 2009 23048 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2010 23049 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 14  value 0x80006d3
+    Debug: 2011 23049 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2012 23050 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 15  value 0x8000ae6
+    Debug: 2013 23050 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2014 23050 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 16  value 0x61000016
+    Debug: 2015 23050 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2016 23051 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 17  value 0x20007f38
+    Debug: 2017 23051 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2018 23051 hla_target.c:74 adapter_load_core_reg_u32(): load from core reg 18  value 0x0
+    Debug: 2019 23051 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2020 23052 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 19 value 0x0
+    Debug: 2021 23052 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2022 23052 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 20 value 0x0
+    Debug: 2023 23052 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2024 23053 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 21 value 0x0
+    Debug: 2025 23053 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2026 23053 hla_target.c:130 adapter_load_core_reg_u32(): load from special reg 22 value 0x0
+    Debug: 2027 23053 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2028 23053 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000040
+    Debug: 2029 23054 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2030 23054 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2031 23054 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2032 23054 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S0  value 0x0
+    Debug: 2033 23054 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2034 23054 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000041
+    Debug: 2035 23054 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2036 23055 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2037 23055 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2038 23055 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S1  value 0x0
+    Debug: 2039 23055 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2040 23055 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000042
+    Debug: 2041 23055 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2042 23056 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2043 23056 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2044 23056 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S2  value 0x0
+    Debug: 2045 23056 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2046 23056 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000043
+    Debug: 2047 23056 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2048 23057 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2049 23058 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2050 23058 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S3  value 0x0
+    Debug: 2051 23058 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2052 23058 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000044
+    Debug: 2053 23058 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2054 23058 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2055 23059 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2056 23059 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S4  value 0x0
+    Debug: 2057 23059 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2058 23059 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000045
+    Debug: 2059 23059 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2060 23059 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2061 23060 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2062 23060 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S5  value 0x0
+    Debug: 2063 23060 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2064 23060 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000046
+    Debug: 2065 23060 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2066 23060 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2067 23061 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2068 23061 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S6  value 0x0
+    Debug: 2069 23061 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2070 23061 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000047
+    Debug: 2071 23061 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2072 23061 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2073 23062 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2074 23062 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S7  value 0x0
+    Debug: 2075 23062 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2076 23062 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000048
+    Debug: 2077 23062 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2078 23063 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2079 23063 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2080 23063 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S8  value 0x0
+    Debug: 2081 23063 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2082 23063 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000049
+    Debug: 2083 23063 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2084 23064 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2085 23064 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2086 23064 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S9  value 0x0
+    Debug: 2087 23064 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2088 23064 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004a
+    Debug: 2089 23064 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2090 23065 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2091 23066 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2092 23066 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S10  value 0x0
+    Debug: 2093 23066 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2094 23066 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004b
+    Debug: 2095 23066 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2096 23066 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2097 23067 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2098 23067 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S11  value 0x0
+    Debug: 2099 23067 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2100 23067 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004c
+    Debug: 2101 23067 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2102 23067 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2103 23068 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2104 23068 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S12  value 0x0
+    Debug: 2105 23068 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2106 23068 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004d
+    Debug: 2107 23068 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2108 23069 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2109 23069 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2110 23069 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S13  value 0x0
+    Debug: 2111 23069 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2112 23069 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004e
+    Debug: 2113 23069 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2114 23070 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2115 23070 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2116 23070 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S14  value 0x0
+    Debug: 2117 23070 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2118 23070 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000004f
+    Debug: 2119 23070 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2120 23071 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2121 23071 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2122 23072 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S15  value 0x0
+    Debug: 2123 23072 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2124 23072 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000050
+    Debug: 2125 23072 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2126 23072 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2127 23073 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2128 23073 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S16  value 0x0
+    Debug: 2129 23073 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2130 23073 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000051
+    Debug: 2131 23073 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2132 23073 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2133 23074 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2134 23074 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S17  value 0x0
+    Debug: 2135 23074 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2136 23074 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000052
+    Debug: 2137 23074 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2138 23075 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2139 23075 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2140 23075 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S18  value 0x0
+    Debug: 2141 23075 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2142 23075 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000053
+    Debug: 2143 23075 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2144 23076 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2145 23077 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2146 23077 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S19  value 0x0
+    Debug: 2147 23077 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2148 23077 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000054
+    Debug: 2149 23077 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2150 23077 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2151 23078 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2152 23078 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S20  value 0x0
+    Debug: 2153 23078 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2154 23078 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000055
+    Debug: 2155 23078 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2156 23078 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2157 23079 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2158 23079 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S21  value 0x0
+    Debug: 2159 23079 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2160 23079 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000056
+    Debug: 2161 23079 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2162 23080 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2163 23080 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2164 23080 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S22  value 0x0
+    Debug: 2165 23080 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2166 23080 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000057
+    Debug: 2167 23080 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2168 23081 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2169 23081 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2170 23081 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S23  value 0x0
+    Debug: 2171 23081 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2172 23081 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000058
+    Debug: 2173 23081 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2174 23082 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2175 23082 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2176 23083 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S24  value 0x0
+    Debug: 2177 23083 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2178 23083 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000059
+    Debug: 2179 23083 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2180 23107 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2181 23107 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2182 23107 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S25  value 0x0
+    Debug: 2183 23107 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2184 23107 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005a
+    Debug: 2185 23107 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2186 23108 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2187 23108 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2188 23108 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S26  value 0x0
+    Debug: 2189 23108 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2190 23108 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005b
+    Debug: 2191 23108 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2192 23109 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2193 23109 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2194 23109 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S27  value 0x0
+    Debug: 2195 23109 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2196 23109 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005c
+    Debug: 2197 23109 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2198 23110 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2199 23110 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2200 23110 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S28  value 0x0
+    Debug: 2201 23110 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2202 23110 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005d
+    Debug: 2203 23110 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2204 23111 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2205 23112 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2206 23112 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S29  value 0x0
+    Debug: 2207 23112 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2208 23112 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005e
+    Debug: 2209 23112 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2210 23112 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2211 23113 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2212 23113 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S30  value 0x0
+    Debug: 2213 23113 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2214 23113 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x0000005f
+    Debug: 2215 23113 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2216 23114 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2217 23114 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2218 23114 hla_target.c:96 adapter_load_core_reg_u32(): load from FPU reg S31  value 0x0
+    Debug: 2219 23114 hla_target.c:59 adapter_load_core_reg_u32(): adapter_load_core_reg_u32
+    Debug: 2220 23114 target.c:2482 target_write_u32(): address: 0xe000edf4, value: 0x00000021
+    Debug: 2221 23114 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf4 4 1
+    Debug: 2222 23115 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0xe000edf8 4 1
+    Debug: 2223 23115 target.c:2394 target_read_u32(): address: 0xe000edf8, value: 0x00000000
+    Debug: 2224 23116 hla_target.c:85 adapter_load_core_reg_u32(): load from FPSCR  value 0x0
+    Debug: 2225 23175 hla_target.c:452 adapter_debug_entry(): entered debug state in core mode: Handler at PC 0x08000ae6, target->state: halted
+    Debug: 2226 23175 target.c:1626 target_call_event_callbacks(): target event 0 (gdb-halt) for core stm32f4x.cpu
+    Debug: 2227 23175 target.c:1626 target_call_event_callbacks(): target event 1 (halted) for core stm32f4x.cpu
+    Debug: 2228 23175 target.c:1626 target_call_event_callbacks(): target event 8 (gdb-end) for core stm32f4x.cpu
+    Debug: 2229 23175 hla_target.c:497 adapter_poll(): halted: PC: 0x08000ae6
+    Debug: 2230 23175 gdb_server.c:3267 gdb_input_inner(): received packet: 'g'
+    Debug: 2231 23176 gdb_server.c:3267 gdb_input_inner(): received packet: 'qXfer:threads:read::0,1000'
+    Debug: 2232 23176 gdb_server.c:3267 gdb_input_inner(): received packet: 'm8000ae6,4'
+    Debug: 2233 23176 gdb_server.c:1456 gdb_read_memory_packet(): addr: 0x0000000008000ae6, len: 0x00000004
+    Debug: 2234 23176 target.c:2248 target_read_buffer(): reading buffer of 4 byte at 0x08000ae6
+    Debug: 2235 23176 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 2
+    Debug: 2236 23178 gdb_server.c:3267 gdb_input_inner(): received packet: 'm8000ae6,2'
+    Debug: 2237 23178 gdb_server.c:1456 gdb_read_memory_packet(): addr: 0x0000000008000ae6, len: 0x00000002
+    Debug: 2238 23178 target.c:2248 target_read_buffer(): reading buffer of 2 byte at 0x08000ae6
+    Debug: 2239 23178 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 1
     #+end_src
+
 
 ** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
 
