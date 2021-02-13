@@ -577,6 +577,10 @@ Nothing.
     STLink.
 
     After setting everything up and running =continue=:
+
+    ~DEMCR~, Debug Exception and Monitor Control Register. See
+    [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::765++0.01][DDI0403E_B_armv7m_arm.pdf: Page 765]].
+    - Sets ~TRCENA~ :: global enable of all DWT and ITM features (again?).
     #+begin_src
     Debug: 1964 22935 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont?'
     Debug: 1965 22936 gdb_server.c:3267 gdb_input_inner(): received packet: 'vCont;c'
@@ -587,9 +591,20 @@ Nothing.
     Debug: 1970 22936 target.c:1741 print_wa_layout():    0x20000000-0x20007fff (32768 bytes)
     Debug: 1971 22936 target.c:2482 target_write_u32(): address: 0xe000edfc, value: 0x01000000
     Debug: 1972 22936 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edfc 4 1
+    #+end_src
+
+    ~DCRDR~, Debug Core Register Data Register
+    - Nulls register :: this is a message passing register. A previous
+      write to ~DCRSR.REGSEL~ describes what was nulled here. See
+      [[pdf:~/exjobb/docs/DDI0403E_B_armv7m_arm.pdf::763++0.00][DDI0403E_B_armv7m_arm.pdf: Page 763]].
+    #+begin_src
     Debug: 1973 22936 armv7m.c:148 armv7m_restore_context():
     Debug: 1974 22936 target.c:2482 target_write_u32(): address: 0xe000edf8, value: 0x00000000
     Debug: 1975 22936 hla_target.c:783 adapter_write_memory(): adapter_write_memory 0xe000edf8 4 1
+    #+end_src
+
+    Various register readouts for GDB. Nothing relating to ITM packets.
+    #+begin_src
     Debug: 1976 22937 target.c:1626 target_call_event_callbacks(): target event 2 (resumed) for core stm32f4x.cpu
     Debug: 1977 22937 target.c:1626 target_call_event_callbacks(): target event 4 (resume-end) for core stm32f4x.cpu
     Debug: 1978 22937 target.c:1626 target_call_event_callbacks(): target event 7 (gdb-start) for core stm32f4x.cpu
@@ -855,7 +870,6 @@ Nothing.
     Debug: 2238 23178 target.c:2248 target_read_buffer(): reading buffer of 2 byte at 0x08000ae6
     Debug: 2239 23178 hla_target.c:768 adapter_read_memory(): adapter_read_memory 0x08000ae6 2 1
     #+end_src
-
 
 ** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
 
