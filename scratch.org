@@ -316,8 +316,8 @@ Nothing.
    - Probe :: represents the physical probe in code form. Architecture agnostic.
    - Session :: an established connection of a *Probe* to a chip.
    - Core :: CPU manipulation.
-** STARTED Port openocd commands to Rust/probe-rs and replicate behavior
-   DEADLINE: <2021-02-11 Thu>
+** DONE Port openocd commands to Rust/probe-rs and replicate behavior
+   CLOSED: [2021-02-14 Sun 00:23] DEADLINE: <2021-02-11 Thu>
    :LOGBOOK:
    CLOCK: [2021-02-12 Fri 18:15]--[2021-02-12 Fri 18:36] =>  0:21
    CLOCK: [2021-02-12 Fri 16:50]--[2021-02-12 Fri 17:46] =>  0:56
@@ -927,9 +927,51 @@ Nothing.
       Dwt::new(&mut core, &component).enable_exception_trace()?;
     #+end_src
 
-** TODO Fork japaric/itm-tools and rewrite it for ~probe-rs~
+** DONE Fork japaric/itm-tools and rewrite it for ~probe-rs~
+   CLOSED: [2021-02-14 Sun 00:36]
+   :LOGBOOK:
+   CLOCK: [2021-02-13 Sat 23:14]--[2021-02-14 Sun 00:36] =>  1:22
+   :END:
    We only concern ourselves with exception tracing for now, so only
    show how that is done.
+
+   Done, see https://github.com/tmplt/itm-tools.
+
+** DONE +Patch probe-rs to properly do exception tracing+
+   :LOGBOOK:
+   CLOCK: [2021-02-17 Wed 14:16]--[2021-02-17 Wed 15:02] =>  0:46
+   :END:
+   What does the below do, and how do we fix it for the stm32f401re?
+   #+begin_src rust
+     let comp = session.get_arm_component()?;
+     let mut core = session.core(0)?;
+     Dwt::new(&mut core, &comp).enable_exception_trace()?;
+   #+end_src
+   [[file:~/code/probe-rs/probe-rs/src/architecture/arm/component/dwt.rs::pub fn enable_exception_trace(&mut self) -> Result<(), Error> {][probe-rs source]].
+   Only ~EXCTRCENA~ is set.
+   ~DWT~ seems like a struct that only touches registers that relate to
+   a single feature. =enable_exception_trace()= only sets ~EXCTRCENA~;
+   =enable_data_trace()= enables and takes an address to monitor; etc.
+
+   There is ~dwt.rs~ that touches DWT-related registers. Then there is
+   ~itm.rs~ that touches ITM-related registers.
+
+   Find an MWE that reproduces exception traces?
+
+   itm-tools debugger reimplemented via probe-rs API. PC sample
+   generation must be disabled however. itm-tools decoders do not handle
+   exception traces and PC sample types.
+
+** DONE Investigate the ITM decoder in probe-rs
+   CLOSED: [2021-02-17 Wed 17:35]
+   :LOGBOOK:
+   CLOCK: [2021-02-17 Wed 16:55]--[2021-02-17 Wed 17:35] =>  0:40
+   :END:
+   Implements decode for exception traces.
+
+   We can trivially decode ITM packets via the probe-rs decoder.
+
+** TODO Investigate why =enable_exception_trace= doesn't work
 
 ** The start: low hanging fruit
 On task dispatch, send ITM package that contains task ID, scheduled
