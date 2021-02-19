@@ -280,8 +280,37 @@ Nothing.
   - Probably a good idea to greenfield the any impl first.
   - probe-rs ITM API seems lackluster. Propose a new one if it comes up.
 
+* Meeting at Grepit, [2021-02-18 Thu];
+- Global/local timestamps to absolute time; see embedded-time.
+- Resolve symbols; IRQ values to RTIC.
+- Offline tool that displays recoded history. Proof of concepts. GUI
+  tool? otherwise emacs interface with magit like detail menues.
+  Simple GUI deps. Self-contained. txui: opengl based.
+- Interleave ITM messages. That is: just write to stimulus ports and
+  make sure they are decoded properly.
+- read up on the protocol.
+- we want ITM packets when resources are locked/unlock. Investigate.
+  timestamp and reg value read/write (and/or lock-unlock).
+
 * Project plan
-** TODO Write the project background
+#+BEGIN: clocktable :scope subtree :maxlevel 0 :step day :tstart "<-1d>" :tend "<now>" :compact t
+
+Daily report: [2021-02-17 Wed]
+| Headline     | Time   |
+|--------------+--------|
+| *Total time* | *3:35* |
+|--------------+--------|
+
+Daily report: [2021-02-18 Thu]
+| Headline     | Time   |
+|--------------+--------|
+| *Total time* | *0:00* |
+#+END:
+
+** TODO Write thesis
+   :LOGBOOK:
+   CLOCK: [2021-02-17 Wed 11:58]--[2021-02-17 Wed 14:07] =>  2:09
+   :END:
 ** DONE Test ~itm-tools~ examples
    SCHEDULED: <2021-01-29 Fri>
    Just go through them from head to tail on the Nucleo.
@@ -972,6 +1001,72 @@ Nothing.
    We can trivially decode ITM packets via the probe-rs decoder.
 
 ** TODO Investigate why =enable_exception_trace= doesn't work
+   :LOGBOOK:
+   CLOCK: [2021-02-18 Thu 07:50]--[2021-02-18 Thu 08:18] =>  0:28
+   :END:
+   I may be misusing the API. It is confusing.
+
+** TODO Translate ITM timestamps to absolute [0%]
+   :LOGBOOK:
+   CLOCK: [2021-02-19 Fri 09:02]--[2021-02-19 Fri 09:13] =>  0:11
+   :END:
+   That is, in this output
+   #+begin_src fundamental
+     ExceptionTrace { exception: ExternalInterrupt(22), action: Entered }
+     TimeStamp { tc: 0, ts: 1627 }
+     ExceptionTrace { exception: ExternalInterrupt(24), action: Entered }
+     TimeStamp { tc: 0, ts: 183 }
+     ExceptionTrace { exception: ExternalInterrupt(24), action: Exited }
+     TimeStamp { tc: 0, ts: 1078 }
+     ExceptionTrace { exception: ExternalInterrupt(23), action: Entered }
+     TimeStamp { tc: 0, ts: 3 }
+     ExceptionTrace { exception: ExternalInterrupt(23), action: Exited }
+     TimeStamp { tc: 0, ts: 565 }
+     ExceptionTrace { exception: ExternalInterrupt(22), action: Returned }
+     TimeStamp { tc: 0, ts: 7 }
+     Sync
+     ExceptionTrace { exception: ExternalInterrupt(256), action: Returned }
+     ItmData { id: 15, payload: [192, 255] }
+     ItmData { id: 15, payload: [0, 0] }
+     Sync
+     ExceptionTrace { exception: ExternalInterrupt(256), action: Exited }
+   #+end_src
+   we want to filter out the relative (from when the target started)
+   ~TimeStamp~ packets and generate absolute timestamps we can attach to
+   all other packets.
+
+*** TODO Read up on the ITM packet protocol
+    :LOGBOOK:
+    CLOCK: [2021-02-19 Fri 09:23]
+    :END:
+
+** TODO Resolve IRQs to task symbol
+   We need to read the ELF here. [[https://crates.io/crates/gimli][gimli]] should be able to help here.
+
+** TODO Make sure we can interleave ITM payloads
+   We may want to write arbitrary payloads to the ITM stimulus ports.
+   Make sure we can actually do that while we exception trace.
+
+   Will we hit "invalid" packets here, or was that just a thing with
+   japaric's decoders?
+
+** TODO Investigate how one would keep a tab on resource (locks)
+   The DWT can take arbitrary addresses (although a limited set) and
+   generate a timestamped (?) packet when such an address is
+   read/written. *Note:* when resources are locked we don't inject any
+   code (really?), the task's BASEPRI is changed, however. How can we
+   keep tabs on when a resource is locked/unlocked?
+   - Can we find the address where the lock is made, store this as a
+     symbol in ELF and when watchpoint it?
+
+** TODO [#C] GUI tool that displays recoded trace
+   Discuss the design more with Per before start. Depends on all other
+   features. We don't want to pull any platform dependencies (i.e. we
+   want to just =cargo install= it); investigate [[https://crates.io/crates/tuix][tuix]], which draws
+   everything on an OpenGL canvas.
+
+   An emacs-interface inspired by magit-history could be implemented
+   also, but only I would use it.
 
 ** The start: low hanging fruit
 On task dispatch, send ITM package that contains task ID, scheduled
