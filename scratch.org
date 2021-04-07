@@ -291,6 +291,19 @@ Nothing.
 - read up on the protocol.
 - we want ITM packets when resources are locked/unlock. Investigate.
   timestamp and reg value read/write (and/or lock-unlock).
+* Meeting at Grepit, [2021-02-25 Thu]
+- mention to probe-rs that I'm working on a better decoder, ask
+  interested people to talk to me.
+- add probe-rs feat to conf DBGMCU properly. Analyse all the other
+  issues that talk about this.
+
+* Meeting at Grepit, [2021-03-04 Thu];
+- Hur smittar man upsteam med licenser för icke-commercial?
+  - Inria
+  - Sqlite3
+* Meeting at Grepit, [2021-03-11 Thu];
+- Start thinking what the daemon will actually do. It will present some
+  convenient trace configuration API, anyhow.
 
 * Project plan
 #+BEGIN: clocktable :scope subtree :maxlevel 0 :step day :tstart "<-1d>" :tend "<now>" :compact t
@@ -994,11 +1007,57 @@ Daily report: [2021-02-18 Thu]
 ** DONE Investigate the ITM decoder in probe-rs
    CLOSED: [2021-02-17 Wed 17:35]
    :LOGBOOK:
+   CLOCK: [2021-02-19 Fri 14:30]--[2021-02-19 Fri 14:32] =>  0:02
    CLOCK: [2021-02-17 Wed 16:55]--[2021-02-17 Wed 17:35] =>  0:40
    :END:
    Implements decode for exception traces.
 
    We can trivially decode ITM packets via the probe-rs decoder.
+
+   - Packets can be sent to any suitable trace sink. It mustn't be the
+     TPIU.
+   - TPIU forms packets into frames, as per CoreSight architecture spec.
+   - TPIU transmits packets in LSB.
+
+** DONE Investigate what https://github.com/orbcode/orbuculum is
+   According to @therealprof, the author is receptive to discussion on
+   the topic.
+
+   See blog posts on http://shadetail.com/blog/.
+
+   - The KCacheGrind feature is of notable interest.
+   - Interactive help available at https://discord.gg/P7FYThy.
+   - The author himself can probably be reached by tagging him on
+     GitHub, or commit author email. <dave@marples.net>
+
+** DONE Transmit trace over serial pin (SWO)
+   CLOSED: [2021-04-07 Wed 13:41]
+   :LOGBOOK:
+   CLOCK: [2021-04-07 Wed 12:03]--[2021-04-07 Wed 13:38] =>  1:35
+   CLOCK: [2021-04-07 Wed 09:58]--[2021-04-07 Wed 11:22] =>  1:24
+   :END:
+   STLink does not read all trace bytes from the target, so we must try
+   with the serial pin instead. How do we enable it?
+
+   The pin is denoted ~TRACESWO~ in [[pdf:~/exjobb/docs/RM0368.pdf::832++0.00][RM0368.pdf: Page 832]]. It is bound to
+   PB3 on the Nucleo.
+
+   - Some "serial wire mode; not in JTAG mode" for async mode (only a
+     single wire is used)
+   - Set ~TRACE_IOEN~ and ~TRACE_MODE = 0b00~ bits. Pin(s) not assigned
+     by default.
+
+   Signal is sent on PB3 with the above configured. Default behavior
+   appears to be async pin.
+
+   *What is the baud rate?* It is configured in ~TPIU_ACPR~,
+   [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::752++0.23][DDI0403E_d_armv7m_arm.pdf: Page 752]]. SWO output clock =
+   async_reference_clock/(swoscalar + 1).
+
+   The async reference clock, HCLK, is 16MHz by default, so to set a
+   115200 baud rate (yielding good bitsteam) prescalar must be set to
+   =16_000_000 / 115_200 - 1=. Bitstream is then read via =stty -F
+   /dev/ttyUSB3 115200; cat /dev/ttyUSB3 | tee itm.bin | xxd -b=.
 
 ** TODO Investigate why =enable_exception_trace= doesn't work
    :LOGBOOK:
@@ -1006,7 +1065,7 @@ Daily report: [2021-02-18 Thu]
    :END:
    I may be misusing the API. It is confusing.
 
-** TODO Translate ITM timestamps to absolute [0%]
+** TODO Translate ITM timestamps to absolute [80%]
    :LOGBOOK:
    CLOCK: [2021-02-19 Fri 09:02]--[2021-02-19 Fri 09:13] =>  0:11
    :END:
@@ -1035,13 +1094,182 @@ Daily report: [2021-02-18 Thu]
    ~TimeStamp~ packets and generate absolute timestamps we can attach to
    all other packets.
 
-*** TODO Read up on the ITM packet protocol
+*** DONE Read up on the ITM packet protocol
+    CLOSED: [2021-02-19 Fri 14:32]
     :LOGBOOK:
-    CLOCK: [2021-02-19 Fri 09:23]
+    CLOCK: [2021-02-19 Fri 09:23]--[2021-02-19 Fri 10:49] =>  1:26
+    :END:
+    The packet protocol is described in [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::779++0.23][DDI0403E_d_armv7m_arm.pdf: Page
+    779]].
+
+    Notes:
+    - If we want to provide an absolute timestamp (e.g. UNIX time, but
+      also in nano-seconds) and save the bytesteam for later then we
+      need to inject non-standard bytes into the local sink file.
+    - If higher prio trace data uses all trace output bandwidth, ITM
+      cannot output timestamp packets.
+
+**** Local timestamps
+     Delta timestamp since last local timestamp, to reduce bandwidth.
+     Payload length depend on required timestamp value. When local
+     timestamp packet is generated, the counter is reset to zero.
+
+     Output synchronously (?) to corresponding ITM/DWT data.
+
+     There are two formats to local timestamps:
+     - format 1, two to five bytes (LTS1) :: ~TC[1:0]~ indicates the
+       packet's relationship with corresponding ITM/DWT data.
+     - format 2, single-byte :: only comprised of the packet header.
+       Output when the required local timestamp vale is in the range
+       1-6. Sync to ITM/DWT data.
+
+**** Global timestamps
+     Absolute timestamp values from a system timestamp clock. Can be
+     used to provide correlation with other trace sources in the system.
+
+     *Not necessarily supported by all implementations!*
+
+     - Global timestamp it 48b or 64b; determined by implementation.
+     - Two formats (for both sizes):
+       - GTS1 :: transmits bits[25:0] of timestamp value, compressed by
+         not transmitting higher-order bytes that match last global
+         timestamp.
+       - GTS2 :: transmits remaining timestamp bits in a 5- or 7-byte
+         packet. This packet is always transferred in full.
+     - A complete global timstamp value is thus transmitted using both a
+       GTS1 and GTS2 packet, GTS1 packet first, then queues GTS2 when
+       bandwidth is available. [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::785++8.24][May transmit multiple GTS1 packets before
+       GTS2, with Wrap=1.]] GTS2 contains higher-order bit for the most
+       recent GTS1.
+
+**** Extension packets
+     Provides additional information about the identified source. On
+     ARMv7-M ITM and DWT packet protocol uses extension packets only to
+     provide additional information for the decoding of Instumentation
+     packets.
+
+**** Source packets
+     Two categories:
+     - Softare source/application; instrumentation :: when software
+       writes to an ITM stimulus port. Size of write transcation
+       determines size of packet. If halfword is written, payload of
+       halfword length is written. [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::788++8.96][If ITM impl. supports more than 32
+       stimulus ports, extension packet is sent to indicate port.]]
+     - Hardware source/diagnostics :: used for event counter wrapping,
+       exception tracing, PC sampling, and data tracing. Extension
+       packets possible, but unused for diagnostics on ARMv7-M.
+
+*** DONE Investigate to what degree probe-rs decodes packets
+    CLOSED: [2021-02-19 Fri 14:33]
+    :LOGBOOK:
+    CLOCK: [2021-02-19 Fri 11:06]--[2021-02-19 Fri 11:25] =>  0:19
+    CLOCK: [2021-02-19 Fri 10:49]--[2021-02-19 Fri 10:51] =>  0:02
     :END:
 
+    These is no symblic diff between global and local timestamps.
+
+    The decoder is surface-level, and there is no assoc of timestamps to
+    other packets. A new crate should be created.
+
+*** DONE Finalize itm-decode library [6/6]
+    CLOSED: [2021-03-06 Sat 00:28]
+
+**** DONE Review error reporting enums
+     CLOSED: [2021-03-01 Mon 16:38]
+     Simplify if possible
+
+**** DONE Thoroughly document
+     CLOSED: [2021-03-02 Tue 15:01]
+     Refer to ARM spec.
+
+**** DONE Request =bitvec= feats upstream
+     CLOSED: [2021-03-02 Tue 15:25]
+     =pop_front=, check if feeding is performant
+
+**** DONE Add tests
+     CLOSED: [2021-03-03 Wed 13:27]
+     Ideally we should have 100% branch coverage...
+
+**** DONE replace adhoc example with a naive decoder
+     CLOSED: [2021-03-03 Wed 14:10]
+**** DONE Add option to decode stimulus strings
+     CLOSED: [2021-03-06 Sat 00:28]
+
+*** DONE Extend itm-decode to associate timestamp to data
+    CLOSED: [2021-03-13 Sat 06:48]
+    :LOGBOOK:
+    CLOCK: [2021-02-23 Tue 11:40]--[2021-02-23 Tue 12:29] =>  0:49
+    CLOCK: [2021-02-22 Mon 14:06]--[2021-02-22 Mon 15:45] =>  1:39
+    CLOCK: [2021-02-22 Mon 11:29]--[2021-02-22 Mon 12:50] =>  1:21
+    CLOCK: [2021-02-22 Mon 10:55]--[2021-02-22 Mon 11:24] =>  0:29
+    CLOCK: [2021-02-20 Sat 09:30]--[2021-02-20 Sat 11:29] =>  1:59
+    CLOCK: [2021-02-20 Sat 08:43]--[2021-02-20 Sat 09:08] =>  0:25
+    CLOCK: [2021-02-20 Sat 08:29]--[2021-02-20 Sat 08:43] =>  0:14
+    CLOCK: [2021-02-19 Fri 15:36]--[2021-02-19 Fri 16:40] =>  1:04
+    :END:
+    A global timestamp value is transmitted using a GTS1 and GTS2
+    packet.
+
+    Additionally, we need to handle Sync packets.
+
+    Repo can be found at https://github.com/tmplt/itm-decode.
+
+    - [2021-02-20 Sat] :: A new crate skeleton has replaced the previous
+      code base. Next up it to copy =itm.bin= from ~itm-tools~, and make
+      sure our bitmatch patterns work as expected.
+
+*** TODO Verify that ITM output is expected [2/6]
+    :LOGBOOK:
+    CLOCK: [2021-02-23 Tue 15:16]--[2021-02-23 Tue 16:21] =>  1:05
+    CLOCK: [2021-02-23 Tue 12:30]--[2021-02-23 Tue 14:07] =>  1:37
+    CLOCK: [2021-02-23 Tue 11:40]--[2021-02-23 Tue 12:29] =>  0:49
+    :END:
+
+**** DONE Write another example to trace
+     CLOSED: [2021-02-25 Thu 12:02]
+     This example should periodically schedule a task so that LTS will
+     eventually wrap.
+
+**** STARTED Check if global timestamps are supported
+     Gabriel says he only managed to generate GTS with ~ts = 0~. If we
+     cannot generate proper GTS we cannot continue.
+
+     Global timestamps can be generated by enabling them in
+     ~ITM_TCR.GTSFREQ~, and in response to DWT requests(?).
+
+     The GTS for the stm32f401re are 48-bit.
+
+     - [2021-02-23 Tue 13:11] global timestamps are all zero.
+     - [2021-02-23 Tue 14:05] the stm32f401re may not support global
+       timestamps. A ticket has been submitted to ST that asks.
+
+**** TODO Check we get an overflow packet when LTS wraps
+     It seems like we get LTS periodically. Verify this.
+
+**** TODO Check if we can interleave intrumentation packets
+     Local timestamps aren't useless without a global timestamps, but we
+     cannot get any global timestamps from them alone.
+
+     *Weren't global timestamps optional?* "if an implementation
+     supports global timestamping". See [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::785++0.00][DDI0403E_d_armv7m_arm.pdf: Page
+     785]]. An ARMv7-M processor /can implement either or both/ of LTS,
+     GTS.
+
+**** TODO Generate a sync packet larger than 48b
+     We need to see what happens when the packet's single set bit isn't
+     in the last byte's MSB. Does the stm32f401re actually generate
+     sync packets larger than this or does it just send
+
+**** DONE Check if behavior changes when ensuring that master bus is powered
+     See https://github.com/probe-rs/probe-rs/issues/350.
+
+     Global timestamps are still zero
+
+** TODO Add probe-rs feat that properly configures DBGMCU
+   So that we do not brick the device.
 ** TODO Resolve IRQs to task symbol
    We need to read the ELF here. [[https://crates.io/crates/gimli][gimli]] should be able to help here.
+   Niklas should be able to help.
 
 ** TODO Make sure we can interleave ITM payloads
    We may want to write arbitrary payloads to the ITM stimulus ports.
@@ -1059,7 +1287,7 @@ Daily report: [2021-02-18 Thu]
    - Can we find the address where the lock is made, store this as a
      symbol in ELF and when watchpoint it?
 
-** TODO [#C] GUI tool that displays recoded trace
+** STARTED [#C] GUI tool that displays recoded trace
    Discuss the design more with Per before start. Depends on all other
    features. We don't want to pull any platform dependencies (i.e. we
    want to just =cargo install= it); investigate [[https://crates.io/crates/tuix][tuix]], which draws
@@ -1067,6 +1295,12 @@ Daily report: [2021-02-18 Thu]
 
    An emacs-interface inspired by magit-history could be implemented
    also, but only I would use it.
+
+   Look at the GUI design of https://percepio.com/tracealyzer/ for
+   ideas.
+
+   Yatekii is working on this. I will only be working with the daemon
+   and backend components.
 
 ** The start: low hanging fruit
 On task dispatch, send ITM package that contains task ID, scheduled
@@ -1094,3 +1328,8 @@ them in a human-readable format to the end-user.
   - Ask Khalid about appropriate real-time goals.
   - Control theory + Lisp + RTIC kan bli riktigt bra blog-artiklar
     annars. Eller separata pubs? Extrem applicering av org-mode.
+
+* Probe-rs thought
+- The ITM/DWT packet protocol decoder is found under ~Struct
+  probe_rs::architecture::arm::swo::Decoder~. ~swo~ is a bad name.
+- [X] The provided decoder will be replaced.
