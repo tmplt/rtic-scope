@@ -29,11 +29,11 @@ fn main() -> Result<()> {
     // session.setup_swv(...)
     println!("Found {} core(s).", session.list_cores().len());
 
-    session.setup_swv(
-        &SwoConfig::new(16_000_000)
-            .set_baud(2_000_000)
-            .set_continuous_formatting(false)
-    )?;
+    // session.setup_swv(
+    //     &SwoConfig::new(16_000_000)
+    //         .set_baud(2_000_000)
+    //         .set_continuous_formatting(false)
+    // )?;
 
     let component = session.get_arm_component()?;
 
@@ -65,12 +65,13 @@ fn main() -> Result<()> {
     // monitor tpiu config internal itm.bin uart off 16000000
     {
         // Set trace port size = 1
-        const TPIU_CSPSR_ADDR: u32 = 0xe0040004;
-        ensure_write_word_32(&mut core, TPIU_CSPSR_ADDR, 0x1)?;
+        // const TPIU_CSPSR_ADDR: u32 = 0xe0040004;
+        // ensure_write_word_32(&mut core, TPIU_CSPSR_ADDR, 0x1)?;
 
-        // Configure clock prescalar and thus SWO baud rate
+        // Configure clock prescalar and thus SWO baud rate (of 9600 Bd, assuming 84MHz HCLK)
         const TPIU_ACPR_ADDR: u32 = 0xe0040010;
-        ensure_write_word_32(&mut core, TPIU_ACPR_ADDR, 0x7)?;
+        ensure_write_word_32(&mut core, TPIU_ACPR_ADDR, 16_000_000 / 115_200 - 1)?;
+        // core.write_word_32(TPIU_ACPR_ADDR, 8749)?;
 
         // Configure trace output protocol: Async SWO, NRZ encoding
         const TPIU_SPPR_ADDR: u32 = 0xe00400f0;
@@ -85,7 +86,9 @@ fn main() -> Result<()> {
         // Configure debug settings
         const DBGMCU_CR_ADDR: u32 = 0xE0042004;
         let mut dbgmcu_cr = core.read_word_32(DBGMCU_CR_ADDR)?;
-        dbgmcu_cr |= 1 << 5; // set TRACE_IOEN; use default trace pin mode and TRACEDATA size
+        dbgmcu_cr |= 1 << 5; // set TRACE_IOEN;
+        dbgmcu_cr &= !(1 << 6);
+        dbgmcu_cr &= !(1 << 7); // TRACE_MODE=00: TRACE pin assignment for async mode
         dbgmcu_cr &= !(1 << 0); // clear DBG_SLEEP: all clocks are disabled in STOP mode
         ensure_write_word_32(&mut core, DBGMCU_CR_ADDR, dbgmcu_cr)?;
     }
@@ -129,21 +132,24 @@ fn main() -> Result<()> {
 
     flash_program(&mut session)?;
 
-    let mut f = File::create("/tmp/itm.bin")?;
+    // let mut f = File::create("/tmp/itm.bin")?;
 
-    while let Ok(bytes) = session.read_swo() {
-        if bytes.len() > 0 {
-            f.write_all(&bytes)?;
-        }
-    }
+    // while let Ok(bytes) = session.read_swo() {
+    //     if bytes.len() > 0 {
+    //         f.write_all(&bytes)?;
+    //     }
+    // }
+
+    loop {}
 
     Ok(())
 }
 
 fn ensure_write_word_32(core: &mut Core, addr: u32, val: u32) -> Result<()> {
     core.write_word_32(addr, val)?;
-    if core.read_word_32(addr)? != val {
-        return Err(anyhow!("readback of register {} is unexpected!"));
+    let read = core.read_word_32(addr)?;
+    if  read != val {
+        return Err(anyhow!("readback of register {:x} = {:x} != {:x} is unexpected!", addr, read, val));
     }
 
     Ok(())
