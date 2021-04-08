@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 probe-rs = "0.10.1"
 anyhow = "1.0"
+structopt = "0.3"
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
