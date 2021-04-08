@@ -3,33 +3,30 @@
 #![no_std]
 #![no_main]
 
-use panic_halt as _;            // panic handler
-use stm32f4::stm32f401;
-use rtic::app;
 use cortex_m::asm;
-use stm32f401::Interrupt;
+use panic_halt as _; // panic handler
+use rtic::app;
+use stm32f4::{self, stm32f401::Interrupt};
+use trace_examples;
 
-#[app(device = stm32f401)]
+#[app(device = stm32f4::stm32f401, peripherals = true)]
 const APP: () = {
     #[init]
     fn init(mut ctx: init::Context) {
-        rtic::pend(Interrupt::EXTI0);
+        trace_examples::enable_tracing(&mut ctx.core, &mut ctx.device);
 
-        unsafe {
-            // Set TSENA (enable trace timestamps)
-            ctx.core.ITM.tcr.modify(|r| r | (1 << 1));
-        }
+        rtic::pend(Interrupt::EXTI0);
     }
 
     // taben after `init` returns
     #[task(binds = EXTI0, priority = 1)]
     fn exti0(_: exti0::Context) {
-        rtic::pend(Interrupt::EXTI2);
+        loop {
+            rtic::pend(Interrupt::EXTI2);
 
-        // wait until all ITM packets are flushed
-        asm::delay(256);
-
-        asm::bkpt();            // stop tracing
+            // wait until all ITM packets are flushed
+            asm::delay(256);
+        }
     }
 
     #[task(binds = EXTI1, priority = 2)]
