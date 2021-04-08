@@ -1074,6 +1074,14 @@ Daily report: [2021-02-18 Thu]
    which can be done by calling =screen /dev/ttyUSB3 9600=
 
 ** TODO Setup some trace examples/demos?
+   Right now we have a set of binaries (1) that we can trace, a separate
+   "scope" that just flashes the binary and optionally enables tracing,
+   and then a seperate utility that reads the SWO (stty/screen/cat).
+   Should we combine them all into a program that does it all? Worthwhile?
+
+   Further, the two functions that enable tracing on the target --- the one
+   we run on the host, and the one we run on the target --- are
+   isomorphic. Can we combine them somehow?
 ** TODO Resolve HW task symbol from IRQ number
    On an exception trace we get an IRQ number, this should map to NVIC
    offset, which then maps to a HW task symbol.
