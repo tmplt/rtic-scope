@@ -324,6 +324,10 @@ Daily report: [2021-02-18 Thu]
    :LOGBOOK:
    CLOCK: [2021-02-17 Wed 11:58]--[2021-02-17 Wed 14:07] =>  2:09
    :END:
+*** TODO Write about async vs. sync tracing to some extent
+    When async, we can lose data because we sample at the wrong time, in
+    difference to sync where we have a dedicated clock wire. See more:
+    [[pdf:~/exjobb/docs/RM0368.pdf::833++0.00][RM0368.pdf: Page 833]].
 ** DONE Test ~itm-tools~ examples
    SCHEDULED: <2021-01-29 Fri>
    Just go through them from head to tail on the Nucleo.
@@ -1059,6 +1063,24 @@ Daily report: [2021-02-18 Thu]
    =16_000_000 / 115_200 - 1=. Bitstream is then read via =stty -F
    /dev/ttyUSB3 115200; cat /dev/ttyUSB3 | tee itm.bin | xxd -b=.
 
+   On the host, we need to set the following
+   #+begin_src
+   speed 9600 baud; line = 0;
+   min = 100; time = 2;
+   -icrnl -imaxbel
+   -opost -onlcr
+   -isig -icanon -echo
+   #+end_src
+   which can be done by calling =screen /dev/ttyUSB3 9600=
+
+** TODO Setup some trace examples/demos?
+** TODO Resolve HW task symbol from IRQ number
+   On an exception trace we get an IRQ number, this should map to NVIC
+   offset, which then maps to a HW task symbol.
+
+** TODO Investigate watchpoint functionality for SW task tracing
+   We may need watchpoints to trace sw tasks. The task queue should be monitored.
+
 ** TODO Investigate why =enable_exception_trace= doesn't work
    :LOGBOOK:
    CLOCK: [2021-02-18 Thu 07:50]--[2021-02-18 Thu 08:18] =>  0:28
@@ -1311,7 +1333,7 @@ package at the head of the task definition.
 Host application that receives all ITM packages and ultimately present
 them in a human-readable format to the end-user.
 
-** In the end: task speficic tracing
+** In the end: task specific tracing
 =#[task(trace = true)]= is the end-goal.
 
 ** In the very end: some useful GUI?
@@ -1333,3 +1355,6 @@ them in a human-readable format to the end-user.
 - The ITM/DWT packet protocol decoder is found under ~Struct
   probe_rs::architecture::arm::swo::Decoder~. ~swo~ is a bad name.
 - [X] The provided decoder will be replaced.
+- The receiver of a trace data stream is called a Trace Port Analyzer
+  (TPA). See [[pdf:~/exjobb/docs/arm-cortex-m4-trm.pdf::92++0.00][arm-cortex-m4-trm.pdf: Page 92]]. We may want to adopt this
+  term to be more easily found.
