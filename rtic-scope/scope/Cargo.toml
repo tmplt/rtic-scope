@@ -10,6 +10,7 @@ edition = "2018"
 probe-rs = "0.10.1"
 anyhow = "1.0"
 structopt = "0.3"
+addr2line = "0.14.1"
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
