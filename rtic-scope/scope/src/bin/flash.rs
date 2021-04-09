@@ -1,3 +1,6 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 use anyhow::{anyhow, Context, Result};
 use probe_rs::{
     flashing::{self, Format},
