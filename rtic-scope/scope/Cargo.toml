@@ -10,7 +10,14 @@ edition = "2018"
 probe-rs = "0.10.1"
 anyhow = "1.0"
 structopt = "0.3"
-addr2line = "0.14.1"
+# addr2line = "0.14.1"
+object = "0.23.0"
+gimli = "0.23.0"
+fallible-iterator = "0.2.0"
+rtic-syntax = { git = "https://github.com/rtic-rs/rtic-syntax.git" }
+syn = "1"
+proc-macro2 = "1"
+quote = "1"
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
