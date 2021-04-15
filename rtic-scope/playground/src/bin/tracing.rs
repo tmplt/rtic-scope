@@ -10,9 +10,9 @@ use stm32f4::{self, stm32f401::Interrupt};
 use trace_examples;
 
 #[app(device = stm32f4::stm32f401, peripherals = true)]
-const APP: () = {
+mod app {
     #[init]
-    fn init(mut ctx: init::Context) {
+    fn init(mut ctx: init::Context) -> (init::LateResources, init::Monotonics) {
         trace_examples::enable_tracing(&mut ctx.core, &mut ctx.device);
 
         rtic::pend(Interrupt::EXTI0);
@@ -20,7 +20,7 @@ const APP: () = {
 
     // taben after `init` returns
     #[task(binds = EXTI0, priority = 1)]
-    fn exti0(_: exti0::Context) {
+    fn blah(_: blah::Context) {
         loop {
             rtic::pend(Interrupt::EXTI2);
 
@@ -41,4 +41,4 @@ const APP: () = {
 
         asm::delay(512);
     }
-};
+}

@@ -1,34 +1,38 @@
+#![allow(unreachable_code)]
 use anyhow::Result;
-use proc_macro2::TokenStream;
+use proc_macro2::{TokenStream, TokenTree};
 use quote::quote;
 use rtic_syntax::{self, Settings};
 use syn;
 
 fn main() -> Result<()> {
-    // let src = String::from_utf8_lossy(include_bytes!(
-    //     "/home/tmplt/exjobb/rtic-scope/playground/src/bin/tracing.rs"
-    // ));
-    // let _syntax: TokenStream = syn::parse_str::<TokenStream>(&src).expect("Unable to parse file");
+    // Parse the RTIC app from the source file
+    let src = String::from_utf8_lossy(include_bytes!(
+        "/home/tmplt/exjobb/rtic-scope/playground/src/bin/tracing.rs"
+    ));
+    let mut rtic_app = syn::parse_str::<TokenStream>(&src)
+        .expect("Unable to parse file")
+        .into_iter()
+        .skip_while(|token| {
+            if let TokenTree::Group(g) = token {
+                return g.stream().into_iter().nth(0).unwrap().to_string().as_str() != "app";
+            }
+            true
+        });
+    let args = {
+        let mut args: Option<TokenStream> = None;
+        if let TokenTree::Group(g) = rtic_app.next().unwrap() {
+            if let TokenTree::Group(g) = g.stream().into_iter().nth(1).unwrap() {
+                args = Some(g.stream());
+            }
+        }
+        args.unwrap()
+    };
+    let app = rtic_app.collect::<TokenStream>();
 
     let mut settings = Settings::default();
     settings.parse_binds = true;
-    let (app, _analysis) = rtic_syntax::parse2(
-        quote!(),
-        quote!(
-            mod app {
-                #[task(binds = UART0)]
-                fn foo(_: foo::Context) {}
-
-                #[task(binds = UART1)]
-                fn bar(_: bar::Context) {}
-
-                #[task(binds = UART2)]
-                fn baz(_: baz::Context) {}
-            }
-        ),
-        settings,
-    )
-    .unwrap();
+    let (app, _analysis) = rtic_syntax::parse2(args, app, settings).unwrap();
 
     app.hardware_tasks
         .iter()
