@@ -1,9 +1,9 @@
 #![allow(unreachable_code)]
 use anyhow::Result;
 use proc_macro2::{TokenStream, TokenTree};
-use quote::quote;
 use rtic_syntax::{self, Settings};
 use syn;
+use std::io::{self, Write};
 
 fn main() -> Result<()> {
     // Parse the RTIC app from the source file
@@ -40,6 +40,20 @@ fn main() -> Result<()> {
         .for_each(|(name, bind)| {
             println!("{} binds {}", name, bind);
         });
+
+    for ident in app
+        .args
+        .device
+        .as_ref()
+        .unwrap()
+        .segments
+        .iter()
+        .map(|ps| ps.ident.to_string())
+    {
+        print!("{}::", ident);
+        io::stdout().flush().unwrap();
+    }
+    println!("Interrupt");
 
     Ok(())
 }
