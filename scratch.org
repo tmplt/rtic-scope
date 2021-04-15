@@ -1082,12 +1082,220 @@ Daily report: [2021-02-18 Thu]
    Further, the two functions that enable tracing on the target --- the one
    we run on the host, and the one we run on the target --- are
    isomorphic. Can we combine them somehow?
-** TODO Resolve HW task symbol from IRQ number
+** TODO Resolve HW task symbol from IRQ number [1/4]
+   :LOGBOOK:
+   CLOCK: [2021-04-09 Fri 13:21]--[2021-04-09 Fri 16:04] =>  2:43
+
+   CLOCK: [2021-04-09 Fri 10:35]--[2021-04-09 Fri 12:04] =>  1:29
+   :END:
    On an exception trace we get an IRQ number, this should map to NVIC
    offset, which then maps to a HW task symbol.
 
+   - irq2symb
+   - tasks may not always map to external interrupts. So we must be able
+     to map all exception numbers.
+   - The vector table contains the entry point address of each exception
+     handler. See [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::525++0.00][DDI0403E_d_armv7m_arm.pdf: Page 525]].
+   - ~VTOR~ register tells us where the table is in memory.
+
+
+   - How is the data that ends up in the vector table stored in the ELF?
+   - Does the NVIC contain the info I think it does?
+     - All NVIC interrupts have an assoc exception number as part of the
+       ARMv7-M exception model. See [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::624++0.00][DDI0403E_d_armv7m_arm.pdf: Page 624]].
+   - vector_table_addr = VTOR<31:7>:'0000000' exception number N found
+     at offset N*0x4.
+   - *How long is the table?* Max 496 external interrupts. Read
+     ~SCS.ICTR.INTLINESNUM[3:0]~. See [[pdf:~/exjobb/docs/DDI0403E_d_armv7m_arm.pdf::618++0.00][DDI0403E_d_armv7m_arm.pdf: Page
+     618]]. Number of interrupt lines is max(32 * (INTLINESNUM + 1), 496).
+*** DONE Find handlers from ELF file instead of live target
+    CLOSED: [2021-04-12 Mon 16:52]
+    It lives somewhere in the ELF, that's for sure, but where? It's not
+    related to flash algorithms, right?
+    - Does ~memory.x~ or ~link.x~ tell us, perhaps?
+      - Yes, the linker script ~link.x.in~ from cortex-m-rt tells us
+        where symbols are stored. The vector table is stored at the
+        start of flash, at ~.vector_table~.
+      - =arm-none-eabi-objdump -t
+        ../target/thumbv7em-none-eabihf/debug/tracing | sort= prints the
+        file's symbols in order. ~.vector_table~ is then found at
+        #+begin_src
+08000000 l    d  .vector_table	00000000 .vector_table
+08000004 g     O .vector_table	00000004 __RESET_VECTOR
+08000008 g     O .vector_table	00000038 __EXCEPTIONS
+08000008 g       .vector_table	00000000 __reset_vector
+08000040 g     O .vector_table	00000154 __INTERRUPTS
+08000040 g       .vector_table	00000000 __eexceptions
+        #+end_src
+
+    We have the symbols we need, now we just read the table starting
+    from the address of the symbols? We should end up with the same data
+    as when we probe the live target.
+
+
+*** TODO Figure out the actual RTIC task name
+    Here we probably need to dig around in DWARF debug. According to
+    Mark, task name should be available under ~DW_TAG_subprogram~.
+
+    gimli can help us here. See Mark's [[file:rauk/src/analysis/dwarf.rs::pub fn get_subprograms(dwarf: &Dwarf<EndianSlice<RunTimeEndian>>) -> Result<Vec<Subprogram>> {][rauk]] on how all RTIC task names
+    are parsed out.
+
+    In order we have
+    - IRQ value
+    - VTABLE offset
+    - exception handler offset
+    - ???
+    - RTIC task name
+
+    If we inspect the asm at EXTI0 (the task named ~blah~), we get the
+    following:
+    #+begin_src
+$ arm-none-eabi-objdump -C --disassemble=EXTI0 rtic-scope/target/thumbv7em-none-eabihf/debug/tracing
+
+rtic-scope/target/thumbv7em-none-eabihf/debug/tracing:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+08000640 <EXTI0>:
+ 8000640:	b580      	push	{r7, lr}
+ 8000642:	466f      	mov	r7, sp
+ 8000644:	b082      	sub	sp, #8
+ 8000646:	2001      	movs	r0, #1
+ 8000648:	f807 0c01 	strb.w	r0, [r7, #-1]
+ 800064c:	f7ff fdea 	bl	8000224 <tracing::APP::EXTI0::{{closure}}>
+ 8000650:	2000      	movs	r0, #0
+ 8000652:	f000 f8ee 	bl	8000832 <cortex_m::register::basepri::write>
+ 8000656:	e7ff      	b.n	8000658 <EXTI0+0x18>
+ 8000658:	b002      	add	sp, #8
+ 800065a:	bd80      	pop	{r7, pc}
+    #+end_src
+
+    So, all RTIC tasks are called ~crate_name::APP~. However, further
+    disassembly at ~<tracing::APP::EXTI0::{{closure}}>~ yields
+    #+begin_src
+08000224 <tracing::APP::EXTI0::{{closure}}>:
+ 8000224:	b580      	push	{r7, lr}
+ 8000226:	466f      	mov	r7, sp
+ 8000228:	b084      	sub	sp, #16
+ 800022a:	2001      	movs	r0, #1
+ 800022c:	f807 0c05 	strb.w	r0, [r7, #-5]
+ 8000230:	f000 f949 	bl	80004c6 <core::cell::Cell<T>::new>
+ 8000234:	f807 0c06 	strb.w	r0, [r7, #-6]
+ 8000238:	f817 0c06 	ldrb.w	r0, [r7, #-6]
+ 800023c:	f807 0c09 	strb.w	r0, [r7, #-9]
+ 8000240:	e7ff      	b.n	8000242 <tracing::APP::EXTI0::{{closure}}+0x1e>
+ 8000242:	f1a7 0009 	sub.w	r0, r7, #9
+ 8000246:	9003      	str	r0, [sp, #12]
+ 8000248:	e7ff      	b.n	800024a <tracing::APP::EXTI0::{{closure}}+0x26>
+ 800024a:	f000 f9cb 	bl	80005e4 <tracing::blah>
+ 800024e:	e7ff      	b.n	8000250 <tracing::APP::EXTI0::{{closure}}+0x2c>
+ 8000250:	b004      	add	sp, #16
+ 8000252:	bd80      	pop	{r7, pc}
+    #+end_src
+    where we find ~tracing::blah~.
+
+*** TODO Find task names and interrupt numbers via rtic-syntax
+    Instead of reversing the generated binary, in which we would have to
+    scan for some ~crate_name::APP~ debug string, we can generate some
+    "report" via RTIC codegen that contains a pairing of
+    (PAC::Interrupt::nr(), task name), which is then trivially assoc'd
+    with the exception number from SWO.
+
+    We'll have to grok rtic-syntax and how its used in cortex-m-rtic to
+    finally generate files (or does it just forward a final input to
+    rustc?). Nevertheless, we want to read the source file, parse it
+    with rtic-syntax, after which we should be able to extract all the
+    data we need.
+
+    Alternatively, if source files cannot be read into the proper
+    format/type, perhaps we can generate a file beside binary in
+    ~target/~?
+
+    Essentially, we want to do something similar to [[file:cortex-m-rtic/macros/src/tests/single.rs::fn analyze() {][this test]].
+
+    Start further grokking at [[file:cortex-m-rtic/macros/src/lib.rs::let (app, analysis) = match rtic_syntax::parse(args, input, settings) {][the app macro]].
+
+    We can find the binding interrupt/exception to a task via
+    [[file:rtic-syntax/src/ast.rs::pub binds: Ident,]]. ~binds: syn::Ident~
+    has a ~to_string()~ impl.
+
+    https://github.com/rtic-rs/rtic-syntax/issues/46
+
+**** The possible approaches to exfiltrate data from an RTIC app
+     What we want is to extract arbitrary information about an RTIC app
+     from the app declaration in the source file. There are two possible
+     ways of doing this: parsing the source file as a whole, and adding
+     file I/O to the =#[app]= macro.
+
+     - Parsing the whole source file :: available to us OOTB is
+       =rtic_syntax::parse2= that can parse the RTIC application out of
+       a =proc_macro2::TokenStream=. From this, we can trivially get the
+       hardware tasks and their binding interrupts/exceptions. However,
+       the function will only parse the arguments of the =#[app]=
+       attribute macro. So if we want to parse the whole source file, we
+       have to first make it a =TokenStream=:
+#+begin_src rust
+    let src = String::from_utf8_lossy(include_bytes!(
+        "/home/tmplt/exjobb/rtic-scope/playground/src/bin/tracing.rs"
+    ));
+
+    let _syntax: TokenStream = syn::parse_str::<TokenStream>(&src).expect("Unable to parse file");
+#+end_src
+       then we have to remove all tokens such that only =mod app { ...
+       }= remains. This would either warrant another parser to
+       rtic-syntax that takes a full source file and returns the RTIC
+       app, but the parser could also be exclusive to the resultant
+       rtic-scope.
+
+       With this approach, any edits in the source file may not
+       necessarily propagate into the binary. Another approach is
+       reading the full source file out of the ELF, then the only
+       problem is whether or not the current binary is flashed or not.
+       The actual source file can be used as a fall-back if source
+       cannot be found in the ELF/DWARF.
+
+     - Adding file I/O to the macro :: is another approach that would
+       result in making the macro non-pure, and add functionality that
+       only a very small subset of users would ever use. This approach
+       would mean that the only way data is extracted is via a file
+       (preferably under some ~target/rtic-scope~) or by communication
+       via some daemon (which means that the daemon will have to be
+       alive during binary genration). This approach seems like just
+       being more moving parts.
+
+     The =#[app]= attribute is (probably) a pure macro in the sense that
+     is takes input code and return output code. I.e.
+
+**** Figuring out the interrupt type
+     The interrupt type is =PAC::Interrupt=. We can probably figure the
+     PAC out from the arguments to the =#[app]= attribute and by looking
+     around in rtic-syntax on how it is resolved, but it cannot be done
+     dynamically because Rust itself lacks reflection.
+
+     - Parse the source code of the PAC, specifically the =impl Nr=
+       part. Messy.
+     - Function that takes a PAC, builds a small library that we
+       dynamically call that returns an assoc of interrupts/exception
+       string representations and their integer values
+     - build argument to rtic-scope where an =Interrupt= with =trait Nr=
+       is given. rtic-scope would then be a wrapper for a larger rtic-adhoc-scope.
+     - reverse the binary for string repr of exception handler (see [[file:rtic-scope/scope/src/bin/irq2symb.rs::// let function_name: String = if let Some(frame) = ctx.find_frames(handler as u64)?.next()?
+       {][irq2symb]]).
+
+     *We want to dynamically build what must be recompiled using cargo
+     as a library into a small adhoc lib that does all type recovery*
+
+     We can use cargo as a config with [[file:cargo/src/cargo/ops/cargo_compile.rs:://! The Cargo "compile" operation.][the compile operation]]. We
+     probably want to use ~cargo::core::Workspace::ephemeral~.
+
+
 ** TODO Investigate watchpoint functionality for SW task tracing
-   We may need watchpoints to trace sw tasks. The task queue should be monitored.
+   We may need watchpoints to trace sw tasks. The task queue should be
+   monitored.
+
+   Software tasks can nevertheless be extracted by parsing the RTIC app declaration.
+
 
 ** TODO Investigate why =enable_exception_trace= doesn't work
    :LOGBOOK:
