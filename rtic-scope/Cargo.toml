@@ -3,3 +3,6 @@ members = [
         "playground",
         "scope",
 ]
+exclude = [
+        "adhoc-lib"
+]

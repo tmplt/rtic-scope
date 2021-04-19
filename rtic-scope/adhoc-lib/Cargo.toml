@@ -1,0 +1,15 @@
+[package]
+name = "adhoc"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+crate_type = ["cdylib"]
+
+[dependencies]
+cortex-m = "0.7"
+quote = "1"
+
+[dependencies.stm32f4]
+version = "0.12"
+features = ["stm32f401"]

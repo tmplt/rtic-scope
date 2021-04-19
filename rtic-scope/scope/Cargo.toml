@@ -18,7 +18,11 @@ rtic-syntax = { git = "https://github.com/rtic-rs/rtic-syntax.git" }
 syn = "1"
 proc-macro2 = "1"
 quote = "1"
+libloading = "0.7"
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
 default-features = false
+
+[dependencies.cargo]
+version = "0.52"
