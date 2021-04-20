@@ -1,13 +1,14 @@
 use cargo;
 use include_dir::include_dir;
 use libloading;
+use proc_macro2::Ident;
 use quote::{format_ident, quote};
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
 use tempdir::TempDir;
 
-pub fn resolve_int_nrs(binds: &[String]) -> BTreeMap<String, u8> {
+pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     // generate a temporary directory
     let tmpdir = TempDir::new("rtic-scope-libadhoc").unwrap();
 

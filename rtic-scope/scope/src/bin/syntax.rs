@@ -1,7 +1,7 @@
 #![allow(unreachable_code)]
 use adhoc_probes::resolve_int_nrs;
 use anyhow::Result;
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use rtic_syntax::{self, Settings};
 use syn;
 
@@ -34,19 +34,16 @@ fn main() -> Result<()> {
     settings.parse_binds = true;
     let (app, _analysis) = rtic_syntax::parse2(args, app, settings).unwrap();
 
-    let binds: Vec<String> = app
+    let binds: Vec<Ident> = app
         .hardware_tasks
         .iter()
-        .map(|(_name, ht)| ht.args.binds.to_string())
+        .map(|(_name, ht)| ht.args.binds.clone())
         .collect();
-
     let int_nrs = crate::resolve_int_nrs(&binds);
-    app.hardware_tasks
-        .iter()
-        .map(|(name, ht)| (name.to_string(), ht.args.binds.to_string()))
-        .for_each(|(name, bind)| {
-            println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());
-        });
+    app.hardware_tasks.iter().for_each(|(name, ht)| {
+        let bind = &ht.args.binds;
+        println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());
+    });
 
     Ok(())
 }
