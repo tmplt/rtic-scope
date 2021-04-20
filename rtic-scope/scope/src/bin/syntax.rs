@@ -1,11 +1,8 @@
 #![allow(unreachable_code)]
+use adhoc_probes::resolve_int_nrs;
 use anyhow::Result;
-use cargo;
-use libloading;
 use proc_macro2::{TokenStream, TokenTree};
 use rtic_syntax::{self, Settings};
-use std::io::{self, Write};
-use std::path::Path;
 use syn;
 
 fn main() -> Result<()> {
@@ -37,50 +34,19 @@ fn main() -> Result<()> {
     settings.parse_binds = true;
     let (app, _analysis) = rtic_syntax::parse2(args, app, settings).unwrap();
 
+    let binds: Vec<String> = app
+        .hardware_tasks
+        .iter()
+        .map(|(_name, ht)| ht.args.binds.to_string())
+        .collect();
+
+    let int_nrs = crate::resolve_int_nrs(&binds);
     app.hardware_tasks
         .iter()
         .map(|(name, ht)| (name.to_string(), ht.args.binds.to_string()))
         .for_each(|(name, bind)| {
-            // TODO figure out the interrupt number
-            println!("{} binds {}", name, bind);
+            println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());
         });
-
-    for ident in app
-        .args
-        .device
-        .as_ref()
-        .unwrap()
-        .segments
-        .iter()
-        .map(|ps| ps.ident.to_string())
-    {
-        print!("{}::", ident);
-        io::stdout().flush().unwrap();
-    }
-    println!("Interrupt");
-
-    let cc = cargo::util::config::Config::default().unwrap();
-    let ws = cargo::core::Workspace::new(
-        Path::new("/home/tmplt/exjobb/rtic-scope/adhoc-lib/Cargo.toml"),
-        &cc,
-    )
-    .unwrap();
-    let build = cargo::ops::compile(
-        &ws,
-        &cargo::ops::CompileOptions::new(&cc, cargo::core::compiler::CompileMode::Build).unwrap(),
-    )
-    .unwrap();
-    assert!(build.cdylibs.len() == 1);
-    let lib = build.cdylibs.first().unwrap();
-    println!("{}", lib.path.to_str().unwrap());
-
-    let value = unsafe {
-        let lib = libloading::Library::new(lib.path.as_os_str())?;
-        let func: libloading::Symbol<extern "C" fn(&str) -> u8> = lib.get(b"rtic_scope_func")?;
-        func("EXTI")
-    };
-
-    println!("{}", value);
 
     Ok(())
 }

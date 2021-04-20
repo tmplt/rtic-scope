@@ -19,6 +19,8 @@ syn = "1"
 proc-macro2 = "1"
 quote = "1"
 libloading = "0.7"
+tempdir = "0.3"
+include_dir = "0.6"
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
