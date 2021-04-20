@@ -34,12 +34,25 @@ fn main() -> Result<()> {
     settings.parse_binds = true;
     let (app, _analysis) = rtic_syntax::parse2(args, app, settings).unwrap();
 
+    let (crate_name, crate_feature) = {
+        let mut segs: Vec<Ident> = app
+            .args
+            .device
+            .as_ref()
+            .unwrap()
+            .segments
+            .iter()
+            .map(|ps| ps.ident.clone())
+            .collect();
+        (segs.remove(0), segs.remove(0))
+    };
+
     let binds: Vec<Ident> = app
         .hardware_tasks
         .iter()
         .map(|(_name, ht)| ht.args.binds.clone())
         .collect();
-    let int_nrs = crate::resolve_int_nrs(&binds);
+    let int_nrs = crate::resolve_int_nrs(&binds, &crate_name, &crate_feature);
     app.hardware_tasks.iter().for_each(|(name, ht)| {
         let bind = &ht.args.binds;
         println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());

@@ -9,7 +9,11 @@ use std::io::Write;
 use std::path::PathBuf;
 use tempdir::TempDir;
 
-pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
+pub fn resolve_int_nrs(
+    binds: &[Ident],
+    crate_name: &Ident,
+    crate_feature: &Ident,
+) -> BTreeMap<Ident, u8> {
     // generate a temporary directory
     let tmpdir = TempDir::new("rtic-scope-libadhoc").unwrap();
 
@@ -28,10 +32,33 @@ pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
         fsf.write_all(file.contents()).unwrap();
     }
 
-    // append the functions we need
+    // append the crate (and its feature) we need
+    {
+        let mut lib_manifest = fs::OpenOptions::new()
+            .append(true)
+            .open(tmpdir.path().join("Cargo.toml"))
+            .unwrap();
+        lib_manifest
+            .write_all(
+                format!(
+                    "\n{} = {{ version = \"\", features = [\"{}\"]}}\n",
+                    crate_name, crate_feature
+                )
+                .as_bytes(),
+            )
+            .unwrap();
+    }
+
+    // append the includes and functions we need
     let mut lib_src = fs::OpenOptions::new()
         .append(true)
         .open(tmpdir.path().join("src/lib.rs"))
+        .unwrap();
+    let include = quote!(
+        use #crate_name::#crate_feature::Interrupt;
+    );
+    lib_src
+        .write_all(format!("\n{}\n", include).as_bytes())
         .unwrap();
     for bind in binds {
         let func = format_ident!("rtic_scope_func_{}", bind);
