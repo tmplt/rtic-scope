@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
 use tempdir::TempDir;
+use std::path::PathBuf;
 
 pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     // generate a temporary directory
@@ -50,9 +51,10 @@ pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     }
 
     // cargo build the adhoc cdylib library
-    // TODO use user-local cargo cache instead of the manifest directory
     let cc = cargo::util::config::Config::default().unwrap();
-    let ws = cargo::core::Workspace::new(&tmpdir.path().join("Cargo.toml"), &cc).unwrap();
+    let mut ws = cargo::core::Workspace::new(&tmpdir.path().join("Cargo.toml"), &cc).unwrap();
+    // Alternatively, CARGO_TARGET_DIR can be specified
+    ws.set_target_dir(cargo::util::Filesystem::new(PathBuf::from("/tmp/rtic-scope")));
     let build = cargo::ops::compile(
         &ws,
         &cargo::ops::CompileOptions::new(&cc, cargo::core::compiler::CompileMode::Build).unwrap(),
