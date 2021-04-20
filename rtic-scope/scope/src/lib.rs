@@ -6,8 +6,8 @@ use quote::{format_ident, quote};
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
-use tempdir::TempDir;
 use std::path::PathBuf;
+use tempdir::TempDir;
 
 pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     // generate a temporary directory
@@ -51,7 +51,9 @@ pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     let cc = cargo::util::config::Config::default().unwrap();
     let mut ws = cargo::core::Workspace::new(&tmpdir.path().join("Cargo.toml"), &cc).unwrap();
     // Alternatively, CARGO_TARGET_DIR can be specified
-    ws.set_target_dir(cargo::util::Filesystem::new(PathBuf::from("/tmp/rtic-scope")));
+    ws.set_target_dir(cargo::util::Filesystem::new(PathBuf::from(
+        "/tmp/rtic-scope",
+    )));
     let build = cargo::ops::compile(
         &ws,
         &cargo::ops::CompileOptions::new(&cc, cargo::core::compiler::CompileMode::Build).unwrap(),
