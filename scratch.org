@@ -1082,7 +1082,8 @@ Daily report: [2021-02-18 Thu]
    Further, the two functions that enable tracing on the target --- the one
    we run on the host, and the one we run on the target --- are
    isomorphic. Can we combine them somehow?
-** TODO Resolve HW task symbol from IRQ number [1/4]
+** DONE Resolve HW task symbol from IRQ number [3/3]
+   CLOSED: [2021-04-20 Tue 16:17]
    :LOGBOOK:
    CLOCK: [2021-04-09 Fri 13:21]--[2021-04-09 Fri 16:04] =>  2:43
 
@@ -1133,7 +1134,8 @@ Daily report: [2021-02-18 Thu]
     as when we probe the live target.
 
 
-*** TODO Figure out the actual RTIC task name
+*** DONE Figure out the actual RTIC task name
+    CLOSED: [2021-04-20 Tue 16:17]
     Here we probably need to dig around in DWARF debug. According to
     Mark, task name should be available under ~DW_TAG_subprogram~.
 
@@ -1195,7 +1197,8 @@ Disassembly of section .text:
     #+end_src
     where we find ~tracing::blah~.
 
-*** TODO Find task names and interrupt numbers via rtic-syntax
+*** DONE Find task names and interrupt numbers via rtic-syntax
+    CLOSED: [2021-04-20 Tue 15:23]
     Instead of reversing the generated binary, in which we would have to
     scan for some ~crate_name::APP~ debug string, we can generate some
     "report" via RTIC codegen that contains a pairing of
@@ -1286,9 +1289,16 @@ Disassembly of section .text:
      *We want to dynamically build what must be recompiled using cargo
      as a library into a small adhoc lib that does all type recovery*
 
-     We can use cargo as a config with [[file:cargo/src/cargo/ops/cargo_compile.rs:://! The Cargo "compile" operation.][the compile operation]]. We
-     probably want to use ~cargo::core::Workspace::ephemeral~.
+     We can use cargo as a config with [[file:cargo/src/cargo/ops/cargo_compile.rs:://! The Cargo "compile" operation.][the compile operation]]. +We
+     probably want to use ~cargo::core::Workspace::ephemeral~.+
 
+** DONE syntax: figure out crate from rtic app
+   CLOSED: [2021-04-20 Tue 17:05]
+   Assumptions made: if the =#[app]= device arguments are formatted as
+   =device = first::last=
+   - The crate name is presumed to be =first=;
+   - The required crate feature is =last=;
+   - The device's interrupts are available via =first::last::Interrupt=.
 
 ** TODO Investigate watchpoint functionality for SW task tracing
    We may need watchpoints to trace sw tasks. The task queue should be
