@@ -18,7 +18,6 @@ pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     for dir in libadhoc_tree.dirs() {
         fs::create_dir_all(tmpdir.path().join(dir.path())).unwrap();
     }
-    let mut lib_src: Option<fs::File> = None;
     for file in libadhoc_tree
         .dirs()
         .iter()
@@ -27,15 +26,13 @@ pub fn resolve_int_nrs(binds: &[Ident]) -> BTreeMap<Ident, u8> {
     {
         let mut fsf = fs::File::create(tmpdir.path().join(file.path())).unwrap();
         fsf.write_all(file.contents()).unwrap();
-        fsf.sync_all().unwrap();
-
-        if file.path().to_str().unwrap() == "src/lib.rs" {
-            lib_src = Some(fsf);
-        }
     }
 
-    // add the functions we need
-    let mut lib_src = lib_src.unwrap();
+    // append the functions we need
+    let mut lib_src = fs::OpenOptions::new()
+        .append(true)
+        .open(tmpdir.path().join("src/lib.rs"))
+        .unwrap();
     for bind in binds {
         let func = format_ident!("rtic_scope_func_{}", bind);
         let int_field = format_ident!("{}", bind);
