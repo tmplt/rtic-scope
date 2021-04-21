@@ -3,6 +3,7 @@ mkShell {
   buildInputs = [
     pkg-config
     pkgs.libusb
+    openssl
 
     # Latest tagged release is from 2017, which lacks some scripts I need.
     (pkgs.openocd.overrideAttrs (old: {
