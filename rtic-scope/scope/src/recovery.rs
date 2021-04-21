@@ -18,7 +18,7 @@ pub fn resolve_int_nrs(
     let tmpdir = TempDir::new("rtic-scope-libadhoc").unwrap();
 
     // extract the skeleton crate
-    include_dir!("../libadhoc").extract(tmpdir.path()).unwrap();
+    include_dir!("assets/libadhoc").extract(tmpdir.path()).unwrap();
 
     // append the crate (and its feature) we need
     {

@@ -1,9 +1,9 @@
 #![allow(unreachable_code)]
-use adhoc_probes::resolve_int_nrs;
 use anyhow::Result;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use rtic_syntax::{self, Settings};
 use syn;
+mod recovery;
 
 fn main() -> Result<()> {
     // Parse the RTIC app from the source file
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
         .iter()
         .map(|(_name, ht)| ht.args.binds.clone())
         .collect();
-    let int_nrs = crate::resolve_int_nrs(&binds, &crate_name, &crate_feature);
+    let int_nrs = recovery::resolve_int_nrs(&binds, &crate_name, &crate_feature);
     app.hardware_tasks.iter().for_each(|(name, ht)| {
         let bind = &ht.args.binds;
         println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());
