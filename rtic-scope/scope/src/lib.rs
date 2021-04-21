@@ -17,20 +17,8 @@ pub fn resolve_int_nrs(
     // generate a temporary directory
     let tmpdir = TempDir::new("rtic-scope-libadhoc").unwrap();
 
-    // extract the included directory
-    let libadhoc_tree = include_dir!("../libadhoc");
-    for dir in libadhoc_tree.dirs() {
-        fs::create_dir_all(tmpdir.path().join(dir.path())).unwrap();
-    }
-    for file in libadhoc_tree
-        .dirs()
-        .iter()
-        .flat_map(|d| d.files())
-        .chain(libadhoc_tree.files())
-    {
-        let mut fsf = fs::File::create(tmpdir.path().join(file.path())).unwrap();
-        fsf.write_all(file.contents()).unwrap();
-    }
+    // extract the skeleton crate
+    include_dir!("../libadhoc").extract(tmpdir.path()).unwrap();
 
     // append the crate (and its feature) we need
     {

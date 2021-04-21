@@ -20,7 +20,7 @@ proc-macro2 = "1"
 quote = "1"
 libloading = "0.7"
 tempdir = "0.3"
-include_dir = "0.6"
+include_dir = { git = "https://github.com/tmplt/include_dir.git" }
 
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
