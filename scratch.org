@@ -1304,7 +1304,15 @@ Disassembly of section .text:
    We may need watchpoints to trace sw tasks. The task queue should be
    monitored.
 
-   Software tasks can nevertheless be extracted by parsing the RTIC app declaration.
+   Software tasks can nevertheless be extracted by parsing the RTIC app
+   declaration.
+
+   A hardware interrupt must be specified as a dispatcher from which
+   software tasks are dispatched. A single dispatcher can handle
+   multiple software taks.
+   - Does this mean that we get an exception trace when a software tasks
+     starts?
+
 
 
 ** TODO Investigate why =enable_exception_trace= doesn't work
