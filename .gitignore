@@ -1,3 +1,11 @@
 *.bbl
 /*.pdf
 /*.tex
+/rtic-syntax/
+/cargo-flash/
+/cargo/
+/cortex-m-rtic/
+/include_dir/
+/itm-decode/
+/itm-tools/
+/rauk/
