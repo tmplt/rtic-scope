@@ -1,8 +1,5 @@
 [workspace]
 members = [
-        "playground",
+        "rtic-apps",
         "scope",
-]
-exclude = [
-        "adhoc-lib"
 ]
