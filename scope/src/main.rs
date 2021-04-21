@@ -4,12 +4,26 @@ use proc_macro2::{Ident, TokenStream, TokenTree};
 use rtic_syntax::{self, Settings};
 use syn;
 mod recovery;
+use std::path::PathBuf;
+use structopt::StructOpt;
+use std::fs;
 
+#[derive(StructOpt)]
+struct Opt {
+    #[structopt(
+        name = "RTIC-SOURCE-FILE",
+        parse(from_os_str),
+        help = "The RTIC source file that should be parsed."
+    )]
+    file: PathBuf,
+}
+
+// TODO handle errors (or at least anyhow them)
 fn main() -> Result<()> {
+    let opt = Opt::from_args();
+
     // Parse the RTIC app from the source file
-    let src = String::from_utf8_lossy(include_bytes!(
-        "/home/tmplt/exjobb/rtic-scope/playground/src/bin/tracing.rs"
-    ));
+    let src = fs::read_to_string(opt.file).unwrap();
     let mut rtic_app = syn::parse_str::<TokenStream>(&src)
         .expect("Unable to parse file")
         .into_iter()
