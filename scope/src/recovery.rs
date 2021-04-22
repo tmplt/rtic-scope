@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
-use tempdir::TempDir;
+use tempfile;
 
 pub fn resolve_int_nrs(
     binds: &[Ident],
@@ -15,7 +15,7 @@ pub fn resolve_int_nrs(
     crate_feature: &Ident,
 ) -> BTreeMap<Ident, u8> {
     // generate a temporary directory
-    let tmpdir = TempDir::new("rtic-scope-libadhoc").unwrap();
+    let tmpdir = tempfile::tempdir().unwrap();
 
     // extract the skeleton crate
     include_dir!("assets/libadhoc").extract(tmpdir.path()).unwrap();
