@@ -4,6 +4,7 @@ use libloading;
 use proc_macro2::Ident;
 use quote::{format_ident, quote};
 use std::collections::BTreeMap;
+use std::env;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -65,10 +66,14 @@ pub fn resolve_int_nrs(
     // cargo build the adhoc cdylib library
     let cc = cargo::util::config::Config::default().unwrap();
     let mut ws = cargo::core::Workspace::new(&tmpdir.path().join("Cargo.toml"), &cc).unwrap();
-    // Alternatively, CARGO_TARGET_DIR can be specified
-    ws.set_target_dir(cargo::util::Filesystem::new(PathBuf::from(
-        "/tmp/rtic-scope",
-    )));
+    let target_dir = if let Ok(target) =
+        env::var("CARGO_TARGET_DIR").or_else(|_| env::var("RTIC_SCOPE_CARGO_TARGET_DIR"))
+    {
+        PathBuf::from(target)
+    } else {
+        tmpdir.path().join("target/")
+    };
+    ws.set_target_dir(cargo::util::Filesystem::new(target_dir));
     let build = cargo::ops::compile(
         &ws,
         &cargo::ops::CompileOptions::new(&cc, cargo::core::compiler::CompileMode::Build).unwrap(),
