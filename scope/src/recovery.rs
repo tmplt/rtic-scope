@@ -10,6 +10,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use tempfile;
 
+const ADHOC_FUNC_PREFIX: &str = "rtic_scope_func_";
+const ADHOC_TARGET_DIR_ENV: &str = "RTIC_SCOPE_CARGO_TARGET_DIR";
+
 pub fn resolve_int_nrs(
     binds: &[Ident],
     crate_name: &Ident,
@@ -52,7 +55,7 @@ pub fn resolve_int_nrs(
         .write_all(format!("\n{}\n", include).as_bytes())
         .unwrap();
     for bind in binds {
-        let func = format_ident!("rtic_scope_func_{}", bind);
+        let func = format_ident!("{}{}", ADHOC_FUNC_PREFIX, bind);
         let int_field = format_ident!("{}", bind);
         let src = quote!(
             #[no_mangle]
@@ -69,7 +72,7 @@ pub fn resolve_int_nrs(
     let cc = cargo::util::config::Config::default().unwrap();
     let mut ws = cargo::core::Workspace::new(&tmpdir.path().join("Cargo.toml"), &cc).unwrap();
     let target_dir = if let Ok(target) =
-        env::var("CARGO_TARGET_DIR").or_else(|_| env::var("RTIC_SCOPE_CARGO_TARGET_DIR"))
+        env::var("CARGO_TARGET_DIR").or_else(|_| env::var(ADHOC_TARGET_DIR_ENV))
     {
         PathBuf::from(target)
     } else {
@@ -91,7 +94,7 @@ pub fn resolve_int_nrs(
         .into_iter()
         .map(|b| {
             let func: libloading::Symbol<extern "C" fn() -> u8> = unsafe {
-                lib.get(format!("rtic_scope_func_{}", b).as_bytes())
+                lib.get(format!("{}{}", ADHOC_FUNC_PREFIX, b).as_bytes())
                     .unwrap()
             };
             (b.clone(), func())
