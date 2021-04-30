@@ -2,5 +2,8 @@
 members = [
         "rtic-apps",
         "scope",
+
+]
+exclude = [
         "rtic-sw-task-trace"
 ]
