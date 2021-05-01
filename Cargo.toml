@@ -1,9 +1,11 @@
 [workspace]
 members = [
         "rtic-apps",
-        "scope",
-
+        "daemon",
 ]
 exclude = [
-        "rtic-sw-task-trace"
+        "rtic-trace", # has its own workspace
 ]
+
+[patch.crates-io]
+cortex-m = { path = "/home/tmplt/exjobb/cortex-m" }

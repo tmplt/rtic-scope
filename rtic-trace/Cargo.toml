@@ -1,5 +1,5 @@
 [package]
-name = "trace-examples"
+name = "rtic-trace"
 version = "0.1.0"
 authors = ["Viktor Sonesten <v@tmplt.dev>"]
 edition = "2018"
@@ -8,11 +8,11 @@ edition = "2018"
 
 [dependencies]
 cortex-m = "0.7"
-cortex-m-rt = "0.6"
-panic-halt = "0.2"
-cortex-m-rtic =  { git = "https://github.com/rtic-rs/cortex-m-rtic" }
-rtic-trace = { path = "../rtic-trace" }
+rtic-trace-macros = { path = "macros" }
 
 [dependencies.stm32f4]
 version = "0.13"
-features = ["stm32f401", "rt"]
+features = ["stm32f401"]
+
+[workspace]
+members = [ "macros" ]

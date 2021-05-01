@@ -7,14 +7,19 @@ use rtic::app;
 #[app(device = stm32f4::stm32f401, peripherals = true, dispatchers = [EXTI1])]
 mod app {
     use cortex_m::asm;
-    use rtic_sw_task_trace as swtrace;
+    use rtic_trace::{self, trace};
     use stm32f4::stm32f401::Interrupt;
-    use trace_examples;
 
     #[init]
     fn init(mut ctx: init::Context) -> (init::LateResources, init::Monotonics) {
-        trace_examples::enable_tracing(&mut ctx.core, &mut ctx.device);
-        swtrace::setup_dwt(&mut ctx.core);
+        rtic_trace::setup::core_peripherals(
+            &mut ctx.core.DCB,
+            &mut ctx.core.TPIU,
+            &mut ctx.core.DWT,
+            &mut ctx.core.ITM,
+        );
+        rtic_trace::setup::device_peripherals(&mut ctx.device.DBGMCU);
+        rtic_trace::setup::assign_dwt_unit(&ctx.core.DWT.c[1]);
 
         rtic::pend(Interrupt::EXTI0);
 
@@ -28,7 +33,11 @@ mod app {
 
     #[task]
     fn software_task(_ctx: software_task::Context) {
-        swtrace::set_current_task_id(42);
+
+        #[trace]
+        fn func() {}
+
+        rtic_trace::set_current_task_id(42);
         asm::delay(1024);
         // rtic::pend(Interrupt::EXTI0);
     }

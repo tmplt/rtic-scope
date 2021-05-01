@@ -1,5 +1,7 @@
 #![no_std]
 
+pub use rtic_trace_macros::trace;
+
 // TODO is there an even better way to store this?
 static mut WATCH_VARIABLE: u32 = 0;
 
@@ -31,6 +33,16 @@ pub mod setup {
         dwt.enable_exception_tracing(true);
         dwt.enable_pc_samples(false);
 
+        itm.unlock();
+        // itm.configure(ITMSettings {
+        //     enable: true, // ITMENA
+        //     enable_local_timestamps: true, // TSENA XXX also take prescalar?
+        //     forward_dwt: true, // TXENA
+        //     global_timestamps: GlobalTimestamps::Every8192Cycles, // GTSFREQ
+        //     bus_id: 1, // TraceBusID
+        //     // XXX What about SYNCENA, SWOENA?
+        // });
+
         // TODO PR new functions to cortex-m
         unsafe {
             itm.lar.write(0xc5acce55); // unlock ITM register
@@ -55,7 +67,7 @@ pub mod setup {
         );
     }
 
-    pub fn assign_dwt_unit(mut dwt: Core::dwt::Comparator) {
+    pub fn assign_dwt_unit(dwt: &Core::dwt::Comparator) {
         let watch_address: u32 = unsafe { &super::WATCH_VARIABLE as *const _ } as u32;
         // TODO do we need to clear the MATCHED, bit[24] after every match?
         dwt.configure(ComparatorFunction::Address(ComparatorAddressSettings {
