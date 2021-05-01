@@ -32,12 +32,15 @@ mod app {
     }
 
     #[task]
+    #[trace]
     fn software_task(_ctx: software_task::Context) {
+        asm::delay(1024);
 
         #[trace]
-        fn func() {}
+        fn func() {
+            let _x = 42;
+        }
 
-        rtic_trace::set_current_task_id(42);
         asm::delay(1024);
         // rtic::pend(Interrupt::EXTI0);
     }
