@@ -68,6 +68,7 @@ pub mod setup {
     }
 }
 
+#[inline]
 pub fn set_current_task_id(id: u32) {
     unsafe {
         WATCH_VARIABLE = id;
