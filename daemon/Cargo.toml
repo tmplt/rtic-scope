@@ -22,6 +22,12 @@ libloading = "0.7"
 tempfile = "3"
 include_dir = { git = "https://github.com/tmplt/include_dir.git" }
 
+
+[dependencies.rtic-trace]
+path = "../rtic-trace"
+default-features = false
+features = [ "std" ]
+
 [dependencies.probe-rs-cli-util]
 version = "0.10.1"
 default-features = false
