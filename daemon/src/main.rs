@@ -1,9 +1,7 @@
 #![allow(unreachable_code)]
 use anyhow::Result;
-use proc_macro2::{Ident, TokenStream, TokenTree};
-use rtic_syntax::{self, Settings};
+use proc_macro2::{TokenStream, TokenTree};
 use syn;
-mod recovery;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use std::fs;
@@ -44,33 +42,9 @@ fn main() -> Result<()> {
     };
     let app = rtic_app.collect::<TokenStream>();
 
-    let mut settings = Settings::default();
-    settings.parse_binds = true;
-    let (app, _analysis) = rtic_syntax::parse2(args, app, settings).unwrap();
 
-    let (crate_name, crate_feature) = {
-        let mut segs: Vec<Ident> = app
-            .args
-            .device
-            .as_ref()
-            .unwrap()
-            .segments
-            .iter()
-            .map(|ps| ps.ident.clone())
-            .collect();
-        (segs.remove(0), segs.remove(0))
-    };
-
-    let binds: Vec<Ident> = app
-        .hardware_tasks
-        .iter()
-        .map(|(_name, ht)| ht.args.binds.clone())
-        .collect();
-    let int_nrs = recovery::resolve_int_nrs(&binds, &crate_name, &crate_feature);
-    app.hardware_tasks.iter().for_each(|(name, ht)| {
-        let bind = &ht.args.binds;
-        println!("{} binds {} ({})", name, bind, int_nrs.get(&bind).unwrap());
-    });
+    rtic_trace::parsing::hardware_tasks(app.clone(), args).unwrap();
+    rtic_trace::parsing::software_tasks(app).unwrap();
 
     Ok(())
 }
