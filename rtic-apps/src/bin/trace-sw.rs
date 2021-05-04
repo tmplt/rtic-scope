@@ -50,6 +50,11 @@ mod app {
             fn func4() {}
         }
 
+        mod blah {
+            #[trace]
+            fn blah() {}
+        }
+
         asm::delay(1024);
         // rtic::pend(Interrupt::EXTI0);
     }
