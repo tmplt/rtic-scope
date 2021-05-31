@@ -5,6 +5,7 @@ members = [
 ]
 exclude = [
         "rtic-trace", # has its own workspace
+        "cargo-rtic-trace", # fow now
 ]
 
 [patch.crates-io]
