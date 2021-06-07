@@ -7,6 +7,7 @@ use rtic::app;
 #[app(device = stm32f4xx_hal::stm32, peripherals = true)]
 mod app {
     use cortex_m::peripheral::syst::SystClkSource;
+    use rtic_trace::{self, tracing::trace};
     use stm32f4xx_hal::stm32;
 
     #[resources]
@@ -15,12 +16,11 @@ mod app {
     }
 
     #[init]
-    fn init(ctx: init::Context) -> (init::LateResources, init::Monotonics) {
+    fn init(mut ctx: init::Context) -> (init::LateResources, init::Monotonics) {
         let mut syst = ctx.core.SYST;
-        let device = ctx.device;
 
         // Allow debugger to attach while sleeping (WFI)
-        device.DBGMCU.cr.modify(|_, w| {
+        ctx.device.DBGMCU.cr.modify(|_, w| {
             w.dbg_sleep().set_bit();
             w.dbg_standby().set_bit();
             w.dbg_stop().set_bit()
@@ -33,13 +33,23 @@ mod app {
         syst.enable_interrupt();
 
         // power on GPIOA, RM0368 6.3.11
-        device.RCC.ahb1enr.modify(|_, w| w.gpioaen().set_bit());
+        ctx.device.RCC.ahb1enr.modify(|_, w| w.gpioaen().set_bit());
         // configure PA5 as output, RM0368 8.4.1
-        device.GPIOA.moder.modify(|_, w| w.moder5().bits(1));
+        ctx.device.GPIOA.moder.modify(|_, w| w.moder5().bits(1));
+
+        // configure tracing
+        rtic_trace::tracing::setup::core_peripherals(
+            &mut ctx.core.DCB,
+            &mut ctx.core.TPIU,
+            &mut ctx.core.DWT,
+            &mut ctx.core.ITM,
+        );
+        rtic_trace::tracing::setup::device_peripherals(&mut ctx.device.DBGMCU);
+        rtic_trace::tracing::setup::assign_dwt_unit(&ctx.core.DWT.c[1]);
 
         (
             init::LateResources {
-                GPIOA: device.GPIOA,
+                GPIOA: ctx.device.GPIOA,
             },
             init::Monotonics(),
         )
