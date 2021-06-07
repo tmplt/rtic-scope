@@ -19,6 +19,13 @@ mod app {
         let mut syst = ctx.core.SYST;
         let device = ctx.device;
 
+        // Allow debugger to attach while sleeping (WFI)
+        device.DBGMCU.cr.modify(|_, w| {
+            w.dbg_sleep().set_bit();
+            w.dbg_standby().set_bit();
+            w.dbg_stop().set_bit()
+        });
+
         // configures the system timer to trigger a SysTick exception every second
         syst.set_clock_source(SystClkSource::Core);
         syst.set_reload(16_000_000); // period = 1s
