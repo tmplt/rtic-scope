@@ -4,7 +4,7 @@
 use panic_halt as _; // panic handler
 use rtic::app;
 
-#[app(device = stm32f4xx_hal::stm32, peripherals = true, dispatchers = [EXTI1])]
+#[app(device = stm32f4::stm32f401, peripherals = true, dispatchers = [EXTI1])]
 mod app {
     use cortex_m::peripheral::syst::SystClkSource;
     use rtic_trace::{self, tracing::trace};
@@ -83,5 +83,10 @@ mod app {
         *TOGGLE = !*TOGGLE;
 
         software_task::spawn().unwrap();
+    }
+
+    #[task(binds = ADC)]
+    fn external(_: external::Context) {
+
     }
 }
