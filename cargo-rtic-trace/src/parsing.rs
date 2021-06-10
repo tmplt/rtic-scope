@@ -1,16 +1,18 @@
-use anyhow::{bail, Result};
-use cargo;
-use include_dir::include_dir;
-use libloading;
-use proc_macro2::Ident;
-use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use rtic_syntax;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+
+use anyhow::{bail, Context, Result};
+use cargo;
+use cargo_metadata::Artifact;
+use include_dir::include_dir;
+use libloading;
+use proc_macro2::{Ident, TokenStream, TokenTree};
+use quote::{format_ident, quote};
+use rtic_syntax;
+use syn;
 use tempfile;
 
 type HwExceptionNumber = u8;
@@ -24,7 +26,7 @@ type SwAssocs = BTreeMap<SwExceptionNumber, Vec<syn::Ident>>;
 /// Parses an RTIC `#[app(device = ...)] mod app { ... }` declaration
 /// and associates the full path of hardware task functions to their
 /// exception numbers as reported by the target.
-pub fn hardware_tasks(
+fn hardware_tasks(
     app: TokenStream,
     args: TokenStream,
     target_dir: PathBuf,
@@ -207,7 +209,7 @@ impl TaskIDGenerator {
 /// Parses an RTIC `mod app { ... }` declaration and associates the full
 /// path of the functions that are decorated with the `#[trace]`-macro
 /// with it's assigned task ID.
-pub fn software_tasks(app: TokenStream) -> Result<SwAssocs> {
+fn software_tasks(app: TokenStream) -> Result<SwAssocs> {
     let app = syn::parse2::<syn::Item>(app)?;
     let mut ctx: Vec<syn::Ident> = vec![];
     let mut assocs = SwAssocs::new();
@@ -275,4 +277,60 @@ pub fn software_tasks(app: TokenStream) -> Result<SwAssocs> {
     traverse_item(&app, &mut ctx, &mut assocs, &mut id_gen);
 
     Ok(assocs)
+}
+
+pub fn resolve_tasks(
+    artifact: &Artifact,
+) -> Result<((ExternalHwAssocs, InternalHwAssocs), SwAssocs)> {
+    // parse the RTIC app from the source file
+    let src = fs::read_to_string(&artifact.target.src_path)
+        .context("Failed to open RTIC app source file")?;
+    let mut rtic_app = syn::parse_str::<TokenStream>(&src)
+        .context("Failed to parse RTIC app source file")?
+        .into_iter()
+        .skip_while(|token| {
+            // TODO improve this
+            if let TokenTree::Group(g) = token {
+                return g.stream().into_iter().nth(0).unwrap().to_string().as_str() != "app";
+            }
+            true
+        });
+    let args = {
+        let mut args: Option<TokenStream> = None;
+        if let TokenTree::Group(g) = rtic_app.next().unwrap() {
+            // TODO improve this
+            if let TokenTree::Group(g) = g.stream().into_iter().nth(1).unwrap() {
+                args = Some(g.stream());
+            }
+        }
+        args.unwrap()
+    };
+    let app = rtic_app.collect::<TokenStream>();
+
+    // Find a suitable target directory from --bin which we'll reuse
+    // for building the adhoc library, unless CARGO_TARGET_DIR is
+    // set.
+    let target_dir = if let Ok(target_dir) = env::var("CARGO_TARGET_DIR") {
+        PathBuf::from(target_dir)
+    } else {
+        // Adhoc will end up under some target/thumbv7em-.../
+        // which is technically incorrect, but scanning for a
+        // "target/" in the path is unstable if CARGO_TARGET_DIR is
+        // set, which may not contain a "target/". Our reuse of the
+        // directory is nevertheless commented with a verbose
+        // directory name.
+        let mut path = artifact.executable.clone().unwrap();
+        path.pop();
+        path.push("rtic-trace-adhoc-target");
+        // NOTE(_all): we do not necessarily need to create all
+        // directories, but we do not want to fail if the directory
+        // exists.
+        fs::create_dir_all(&path).unwrap();
+        path
+    };
+
+    let (ints, excps) = hardware_tasks(app.clone(), args, target_dir)?;
+    let sw_tasks = software_tasks(app)?;
+
+    Ok(((excps, ints), sw_tasks))
 }

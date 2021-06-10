@@ -1,9 +1,9 @@
 [workspace]
 members = [
         "rtic-apps",
-        "daemon",
 ]
 exclude = [
+        "daemon", # deprecated
         "rtic-trace", # has its own workspace
         "cargo-rtic-trace", # fow now
 ]

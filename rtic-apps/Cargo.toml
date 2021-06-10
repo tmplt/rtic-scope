@@ -13,7 +13,7 @@ cortex-m = "0.7"
 cortex-m-rt = "0.6"
 panic-halt = "0.2"
 cortex-m-rtic =  { git = "https://github.com/rtic-rs/cortex-m-rtic" }
-rtic-trace = { path = "../rtic-trace", features = [ "tracing" ] }
+rtic-trace = { path = "../rtic-trace" }
 
 [dependencies.stm32f4]
 version = "0.13"
